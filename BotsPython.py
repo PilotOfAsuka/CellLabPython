@@ -51,6 +51,7 @@ class BotGenome:
         self.food = food
         self.position = (x, y)
         self.color = color
+    MAX_ENERGY = 1100  # Максимальный уровень энергии для бота
 
         # функция выполнения генома
     def execute_genome(self, occupied_positions, food_positions):
@@ -74,7 +75,8 @@ class BotGenome:
         # функция фотосинтеза
     def photosynthesis(self):
         light_intensity = get_light_intensity(self.position[1])
-        self.food += 5 * light_intensity  # Увеличиваем энергию в зависимости от интенсивности света
+        self.food += 2 * light_intensity  # Увеличиваем энергию в зависимости от интенсивности света
+        self.food = min(self.food, self.MAX_ENERGY)  # Ограничиваем максимальное количество энергии
         self.move_ptr()
 
         
@@ -112,6 +114,7 @@ class BotGenome:
             # Проверяем наличие еды и обновляем уровень энергии
             if (new_x, new_y) in food_positions:
                 self.food += 1
+                self.food = min(self.food, self.MAX_ENERGY)  # Ограничиваем максимальное количество энергии
                 print("Поглотил еду")
                 food_positions.remove((new_x, new_y))
             dir_index = (self.ptr + 2) % len(self.genome)
@@ -312,6 +315,6 @@ while True:
     draw_temp_count(temperature)
     pygame.display.flip()
     print(f'Цикл номер: {cycle_count}')
-    pygame.time.delay(0)  # Задержка в 100 миллисекунд
+    pygame.time.delay(100)  # Задержка в 100 миллисекунд
 
 
