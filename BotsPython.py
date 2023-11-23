@@ -8,11 +8,25 @@ pygame.init()
 
 # Константы
 WIDTH, HEIGHT = 800, 800
-CELL_SIZE = 10 # размер клетки изменяя этот параметр меняется масштаб
+CELL_SIZE = 5 # размер клетки изменяя этот параметр меняется масштаб
 GRID_SIZE = WIDTH // CELL_SIZE
 cycle_count = 0
 max_temperature_change = 15  # Максимальное изменение температуры
 base_temperature = 5  # Базовая температура
+
+# словарь направлений
+def move_right(): return (1, 0)
+def move_left(): return (-1, 0)
+def move_down(): return (0, 1)
+def move_up(): return (0, -1)
+
+move_actions = {
+    1: move_right,
+    2: move_left,
+    3: move_down,
+    4: move_up
+}
+#>>>>>>>>>>><<<<<<<<<<<
 
 # Настройка окна
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -79,12 +93,8 @@ class BotGenome:
     def move(self):
          # Модификация для движения бота
         move_dir_index = (self.ptr + 1) % len(self.genome)
-        move_dir = self.genome[move_dir_index] % 8
-        dx, dy = 0, 0
-        if move_dir == 0: dx = 1
-        elif move_dir == 1: dx = -1
-        elif move_dir == 2: dy = 1
-        elif move_dir == 3: dy = -1
+        move_dir = self.genome[move_dir_index] % 4  # Теперь у нас только 4 направления
+        dx, dy = move_actions.get(move_dir, lambda: (0, 0))()
         self.food -= calculate_energy_cost(temperature, 10)
         # Обновление позиции бота
         x, y = self.position
