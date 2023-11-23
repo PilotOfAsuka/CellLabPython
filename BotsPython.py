@@ -8,23 +8,24 @@ pygame.init()
 
 # Константы
 WIDTH, HEIGHT = 800, 800
-CELL_SIZE = 5 # размер клетки изменяя этот параметр меняется масштаб
+CELL_SIZE = 20 # размер клетки изменяя этот параметр меняется масштаб
 GRID_SIZE = WIDTH // CELL_SIZE
 cycle_count = 0
 max_temperature_change = 15  # Максимальное изменение температуры
 base_temperature = 5  # Базовая температура
 
 # словарь направлений
-def move_right(): return (1, 0)
-def move_left(): return (-1, 0)
-def move_down(): return (0, 1)
-def move_up(): return (0, -1)
+class Direction:
+    UP = 0
+    RIGHT = 1
+    DOWN = 2
+    LEFT = 3
 
 move_actions = {
-    1: move_right,
-    2: move_left,
-    3: move_down,
-    4: move_up
+    Direction.UP: lambda: (0, -1),   # Вверх
+    Direction.RIGHT: lambda: (1, 0), # Вправо
+    Direction.DOWN: lambda: (0, 1),  # Вниз
+    Direction.LEFT: lambda: (-1, 0), # Влево
 }
 #>>>>>>>>>>><<<<<<<<<<<
 
@@ -52,18 +53,18 @@ class BotGenome:
         self.color = color
 
         # функция выполнения генома
-    def execute_genome(self):
+    def execute_genome(self, occupied_positions):
         self.food -= calculate_energy_cost(temperature, 10)
         command = self.genome[self.ptr]
-        self.execute_command(command)
+        self.execute_command(command, occupied_positions)
 
         # функция выполнений команд
-    def execute_command(self, command):
+    def execute_command(self, command,occupied_positions):
         # Выполнение команды в зависимости от числа
         if command in range(10,24):
             self.photosynthesis()
         elif command in range(25,40):
-            self.move()
+            self.move(occupied_positions)
         elif command == range(1,9):
             self.how_many_food()
         else: 
@@ -90,27 +91,35 @@ class BotGenome:
             self.ptr = (self.ptr + self.genome[next_next_ptr_index]) % len(self.genome)
 
         # функция движения клетки и проверки на столкновение
-    def move(self):
-         # Модификация для движения бота
+    
+    def move(self, occupied_positions):
+        # Модификация для движения бота
         move_dir_index = (self.ptr + 1) % len(self.genome)
         move_dir = self.genome[move_dir_index] % 4  # Теперь у нас только 4 направления
-        dx, dy = move_actions.get(move_dir, lambda: (0, 0))()
+        dx, dy = move_actions.get(move_dir, lambda: (0, 0))()  # Получаем смещение
         self.food -= calculate_energy_cost(temperature, 10)
+
         # Обновление позиции бота
         x, y = self.position
         new_x, new_y = ((x + dx) % GRID_SIZE, (y + dy) % GRID_SIZE)
-        if not any(bot.position == (new_x, new_y) for bot in bots):  # Проверить, занята ли клетка
+        # Проверяем, свободна ли новая позиция
+        if (new_x, new_y) not in occupied_positions:
+            # Обновляем позиции в словаре
+            del occupied_positions[(x, y)]
+            occupied_positions[(new_x, new_y)] = self
             self.position = new_x, new_y
+
+            # Проверяем наличие еды и обновляем уровень энергии
+            if (new_x, new_y) in food_positions:
+                self.food += 1
+                food_positions.remove((new_x, new_y))
+
             dir_index = (self.ptr + 2) % len(self.genome)
-            self.ptr = (self.ptr + self.genome[dir_index]) % len(self.genome)
-        if self.position in food_cells:
-            self.food += 1  # Восстанавливаем энергию
-            food_cells.remove(self.position)  # Удаляем клетку еды
-            dir_index = (self.ptr + 43) % len(self.genome)
             self.ptr = (self.ptr + self.genome[dir_index]) % len(self.genome)
         else:
             dir_index = (self.ptr + 3) % len(self.genome)
             self.ptr = (self.ptr + self.genome[dir_index]) % len(self.genome)
+
             
         # функция поворота (НЕреализованно)
     def rotate(self):
@@ -137,44 +146,44 @@ class BotGenome:
         
         # функция деления
     def reproduce(self, bots):
-        if not self.is_space_to_reproduce(bots):
-            return None  # Нет места для деления
 
-        # Создание нового бота с похожим геномом
-        new_genome = self.genome[:]
-        mutation_index = random.randint(0, len(new_genome) - 1)
-        new_genome[mutation_index] = random.randint(0, 63)
+        # Получаем список свободных позиций вокруг бота
+        free_positions = self.get_free_adjacent_positions(occupied_positions)
 
-        # Выбор позиции для нового бота
-        free_positions = self.get_free_adjacent_positions(bots)
         if not free_positions:
-            return None  # Нет свободных позиций
+            return None  # Нет свободных позиций для размножения
 
+        # Выбираем случайную свободную позицию для нового бота
         new_position = random.choice(free_positions)
-        new_color = (0, max(self.color[1] - 10, 0), 0)  # Уменьшаем зеленый компонент
-        new_bot = BotGenome(genome_size=len(new_genome), food=self.food // 2, x=new_position[0], y=new_position[1], color=new_color)
-        self.food = self.food // 2  # Поделить энергию между родителем и потомком
+
+        # Создаем нового бота в выбранной позиции
+        new_color = (0, max(self.color[1] - 10, 0), 0)  # Новый цвет для бота
+        new_bot = BotGenome(genome_size=len(self.genome), food=self.food // 2, x=new_position[0], y=new_position[1], color=new_color)
+        self.food //= 2  # Делим энергию между родителем и потомком
         return new_bot
 
+
         # функция получения свободного места вокруг
-    def get_free_adjacent_positions(self, bots):
+    def get_free_adjacent_positions(self, occupied_positions):
         adjacent_positions = [
             ((self.position[0] + dx) % GRID_SIZE, (self.position[1] + dy) % GRID_SIZE)
             for dx in [-1, 0, 1] for dy in [-1, 0, 1] if not (dx == 0 and dy == 0)
         ]
-        return [pos for pos in adjacent_positions if pos not in [bot.position for bot in bots]]
+        return [pos for pos in adjacent_positions if pos not in occupied_positions]
         # функция проверки свободного места
-    def is_space_to_reproduce(self, bots):
+        
+    def is_space_to_reproduce(self, occupied_positions):
+        # Вычисляем соседние позиции
         adjacent_positions = [
             ((self.position[0] + dx) % GRID_SIZE, (self.position[1] + dy) % GRID_SIZE)
             for dx in [-1, 0, 1] for dy in [-1, 0, 1] if not (dx == 0 and dy == 0)
         ]
-        return any(pos not in [bot.position for bot in bots] for pos in adjacent_positions)
+        # Проверяем, есть ли хотя бы одна свободная позиция
+        return any(pos not in occupied_positions for pos in adjacent_positions)
 
 
 
 #>>>>>>отдельные функции<<<<<<<<<
-
 # функция расчёта потребления энергии от температуры
 def calculate_energy_cost(temperature, base_energy_cost):
     optimal_temperature = 5  # Оптимальная температура
@@ -252,22 +261,21 @@ while True:
             pygame.quit()
             sys.exit()
 
+    occupied_positions = {(bot.position[0], bot.position[1]): bot for bot in bots}
+    food_positions = set(food_cells)
+    
     # Удаление ботов с нулевым или отрицательным уровнем энергии и создание клеток еды
-    for bot in bots:
-        if bot.food < 0:
-            if random.random() < 0.2:  # Вероятность 20% на создание клетки еды
-                food_cells.append(bot.position)
-
+    food_cells.extend([bot.position for bot in bots if bot.food < 0 and random.random() < 0.2])
     bots = [bot for bot in bots if bot.food >= 0]
 
     new_bots = []
     for bot in bots:
-        # Выполнение команды генома для каждого бота
-        bot.execute_genome()
+        bot.execute_genome(occupied_positions)
         if bot.food > 1000 and bot.is_space_to_reproduce(bots):
-            new_bot = bot.reproduce(bots)
+            new_bot = bot.reproduce(occupied_positions)
             if new_bot:
                 new_bots.append(new_bot)
+                occupied_positions[new_bot.position] = new_bot  # Добавляем нового бота в словарь занятых позиций
 
                 
     # Случайное появление еды
@@ -281,7 +289,9 @@ while True:
     bots.extend(new_bots)  # Добавляем новых ботов в основной список
     new_bots.clear()       # Очищаем список новых ботов для следующего цикла
 
+    #
 
+    
     # Обновление дисплея
     screen.fill(BKG_color)
     draw_bots(bots)
@@ -291,6 +301,7 @@ while True:
     draw_bot_count(bots)
     draw_temp_count(temperature)
     pygame.display.flip()
+    print(f'Цикл номер: {cycle_count}')
     pygame.time.delay(100)  # Задержка в 100 миллисекунд
 
 
