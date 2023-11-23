@@ -105,19 +105,18 @@ class BotGenome:
 
         # Проверяем, свободна ли новая позиция
         if (new_x, new_y) not in occupied_positions:
+            # Обновляем позиции в словаре
+            del occupied_positions[(x, y)]
+            occupied_positions[(new_x, new_y)] = self
+            self.position = new_x, new_y
             # Проверяем наличие еды и обновляем уровень энергии
             if (new_x, new_y) in food_positions:
                 self.food += 1
                 print("Поглотил еду")
                 food_positions.remove((new_x, new_y))
-
-            # Обновляем позиции в словаре
-            del occupied_positions[(x, y)]
-            occupied_positions[(new_x, new_y)] = self
-            self.position = new_x, new_y
-
             dir_index = (self.ptr + 2) % len(self.genome)
             self.ptr = (self.ptr + self.genome[dir_index]) % len(self.genome)
+            
         else:
             dir_index = (self.ptr + 3) % len(self.genome)
             self.ptr = (self.ptr + self.genome[dir_index]) % len(self.genome)
@@ -159,7 +158,8 @@ class BotGenome:
         new_position = random.choice(free_positions)
 
         # Создаем нового бота в выбранной позиции
-        new_color = (0, max(self.color[1] - 10, 0), 0)  # Новый цвет для бота
+        red_component = max(0, min(255, int(temperature * 10)))
+        new_color = (red_component, max(self.color[1] - 10, 0), 0)  # Новый цвет для бота
         new_bot = BotGenome(genome_size=len(self.genome), food=self.food // 2, x=new_position[0], y=new_position[1], color=new_color)
         self.food //= 2  # Делим энергию между родителем и потомком
         return new_bot
@@ -253,23 +253,24 @@ def generate_food_position(width, height):
 bots = [BotGenome(x=random.randint(0, GRID_SIZE - 1), y=random.randint(0, GRID_SIZE - 1)) for _ in range(START_NUMOFCELL)]
 food_cells = []
 new_bots = []
-food_positions = {}
+food_positions = ()
 
 
 # Основной цикл игры
 while True:
+    food_positions = set(food_cells)
     update_temperature(cycle_count)  # Обновляем температуру
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             pygame.quit()
             sys.exit()
-
+            
+    # Фильтрация ботов с энергией >= 0
+    bots = [bot for bot in bots if bot.food >= 0]
+           
+    # Обновление словаря занятых позиций после удаления ботов
     occupied_positions = {(bot.position[0], bot.position[1]): bot for bot in bots}
-
-    
-    # Удаление ботов с нулевым или отрицательным уровнем энергии и создание клеток еды
-    food_cells.extend([bot.position for bot in bots if bot.food < 0 and random.random() < 0.2])
     
     # Обновляем состояние каждого бота и фильтруем тех, кто может размножаться
     # Генератор для активных ботов, которые могут двигаться и размножаться
@@ -287,11 +288,11 @@ while True:
 
     # Случайное появление еды
     if random.random() < 0.3:  # 30% вероятность
-        food_position = (generate_food_position(GRID_SIZE-1,GRID_SIZE-1))
+        food_position = generate_food_position(GRID_SIZE - 1, GRID_SIZE - 1)
         # Убедимся, что еда не появляется на занятой клетке
-        if food_position not in [bot.position for bot in bots] and food_position not in food_cells:
+        if food_position not in occupied_positions and food_position not in food_cells:
             food_cells.append(food_position)
-            food_positions = set(food_cells)
+
 
     # В конце основного игрового цикла
     bots.extend(new_bots)  # Добавляем новых ботов в основной список
@@ -299,7 +300,8 @@ while True:
 
     
 
-    
+   
+    food_positions = set(food_cells)
     # Обновление дисплея
     screen.fill(BKG_color)
     draw_bots(bots)
@@ -310,6 +312,6 @@ while True:
     draw_temp_count(temperature)
     pygame.display.flip()
     print(f'Цикл номер: {cycle_count}')
-    pygame.time.delay(100)  # Задержка в 100 миллисекунд
+    pygame.time.delay(0)  # Задержка в 100 миллисекунд
 
 
