@@ -8,10 +8,10 @@ pygame.init()
 
 # Константы
 WIDTH, HEIGHT = 800, 800
-CELL_SIZE = 20 # размер клетки изменяя этот параметр меняется масштаб
+CELL_SIZE = 5 # размер клетки изменяя этот параметр меняется масштаб
 GRID_SIZE = WIDTH // CELL_SIZE
 cycle_count = 0
-max_temperature_change = 15  # Максимальное изменение температуры
+max_temperature_change = 20  # Максимальное изменение температуры
 base_temperature = 5  # Базовая температура
 
 # словарь направлений
@@ -53,18 +53,18 @@ class BotGenome:
         self.color = color
 
         # функция выполнения генома
-    def execute_genome(self, occupied_positions):
+    def execute_genome(self, occupied_positions, food_positions):
         self.food -= calculate_energy_cost(temperature, 10)
         command = self.genome[self.ptr]
-        self.execute_command(command, occupied_positions)
+        self.execute_command(command, occupied_positions, food_positions)
 
         # функция выполнений команд
-    def execute_command(self, command,occupied_positions):
+    def execute_command(self, command,occupied_positions, food_positions):
         # Выполнение команды в зависимости от числа
         if command in range(10,24):
             self.photosynthesis()
         elif command in range(25,40):
-            self.move(occupied_positions)
+            self.move(occupied_positions, food_positions)
         elif command == range(1,9):
             self.how_many_food()
         else: 
@@ -92,7 +92,7 @@ class BotGenome:
 
         # функция движения клетки и проверки на столкновение
     
-    def move(self, occupied_positions):
+    def move(self, occupied_positions, food_positions):
         # Модификация для движения бота
         move_dir_index = (self.ptr + 1) % len(self.genome)
         move_dir = self.genome[move_dir_index] % 4  # Теперь у нас только 4 направления
@@ -102,17 +102,19 @@ class BotGenome:
         # Обновление позиции бота
         x, y = self.position
         new_x, new_y = ((x + dx) % GRID_SIZE, (y + dy) % GRID_SIZE)
+
         # Проверяем, свободна ли новая позиция
         if (new_x, new_y) not in occupied_positions:
+            # Проверяем наличие еды и обновляем уровень энергии
+            if (new_x, new_y) in food_positions:
+                self.food += 1
+                print("Поглотил еду")
+                food_positions.remove((new_x, new_y))
+
             # Обновляем позиции в словаре
             del occupied_positions[(x, y)]
             occupied_positions[(new_x, new_y)] = self
             self.position = new_x, new_y
-
-            # Проверяем наличие еды и обновляем уровень энергии
-            if (new_x, new_y) in food_positions:
-                self.food += 1
-                food_positions.remove((new_x, new_y))
 
             dir_index = (self.ptr + 2) % len(self.genome)
             self.ptr = (self.ptr + self.genome[dir_index]) % len(self.genome)
@@ -136,7 +138,7 @@ class BotGenome:
 
         # функция перемещения указателя текущей команды
     def move_ptr(self):
-        # Перемещение УТК к следующей команде
+        # Перемещения УТК к следующей команде
         self.ptr = (self.ptr + 1) % len(self.genome)
 
         # функция мутации
@@ -209,8 +211,8 @@ def draw_bot_count(bots):
     screen.blit(count_text, (10, 30))  # Меняйте положение текста при необходимости
 
 # функция отрисовки еды
-def draw_food_cells(food_cells):
-    for pos in food_cells:
+def draw_food_cells(food_position):
+    for pos in food_position:
         rect = pygame.Rect(pos[0] * CELL_SIZE, pos[1] * CELL_SIZE, CELL_SIZE, CELL_SIZE)
         pygame.draw.rect(screen, FOOD_COLOR, rect) # FOOD_COLOR - цвет еды
 
@@ -250,6 +252,8 @@ def generate_food_position(width, height):
 # Создание нескольких ботов
 bots = [BotGenome(x=random.randint(0, GRID_SIZE - 1), y=random.randint(0, GRID_SIZE - 1)) for _ in range(START_NUMOFCELL)]
 food_cells = []
+new_bots = []
+food_positions = {}
 
 
 # Основной цикл игры
@@ -262,40 +266,44 @@ while True:
             sys.exit()
 
     occupied_positions = {(bot.position[0], bot.position[1]): bot for bot in bots}
-    food_positions = set(food_cells)
+
     
     # Удаление ботов с нулевым или отрицательным уровнем энергии и создание клеток еды
     food_cells.extend([bot.position for bot in bots if bot.food < 0 and random.random() < 0.2])
-    bots = [bot for bot in bots if bot.food >= 0]
+    
+    # Обновляем состояние каждого бота и фильтруем тех, кто может размножаться
+    # Генератор для активных ботов, которые могут двигаться и размножаться
+    active_bots = (bot for bot in bots if bot.food >= 0 and bot.is_space_to_reproduce(occupied_positions))
 
-    new_bots = []
-    for bot in bots:
-        bot.execute_genome(occupied_positions)
-        if bot.food > 1000 and bot.is_space_to_reproduce(bots):
+    for bot in active_bots:
+        bot.execute_genome(occupied_positions, food_positions)
+
+        # Если бот готов к размножению, пытаемся создать нового бота
+        if bot.food > 1000:
             new_bot = bot.reproduce(occupied_positions)
             if new_bot:
                 new_bots.append(new_bot)
-                occupied_positions[new_bot.position] = new_bot  # Добавляем нового бота в словарь занятых позиций
+                occupied_positions[new_bot.position] = new_bot
 
-                
     # Случайное появление еды
     if random.random() < 0.3:  # 30% вероятность
         food_position = (generate_food_position(GRID_SIZE-1,GRID_SIZE-1))
         # Убедимся, что еда не появляется на занятой клетке
         if food_position not in [bot.position for bot in bots] and food_position not in food_cells:
             food_cells.append(food_position)
+            food_positions = set(food_cells)
 
     # В конце основного игрового цикла
     bots.extend(new_bots)  # Добавляем новых ботов в основной список
     new_bots.clear()       # Очищаем список новых ботов для следующего цикла
 
-    #
+    
 
     
     # Обновление дисплея
     screen.fill(BKG_color)
     draw_bots(bots)
-    draw_food_cells(food_cells)
+    draw_food_cells(food_positions)
     cycle_count += 1
     draw_cycle_count(cycle_count)
     draw_bot_count(bots)
