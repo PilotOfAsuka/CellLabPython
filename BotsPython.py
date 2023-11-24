@@ -107,22 +107,22 @@ class BotGenome:
 
         # Проверяем, свободна ли новая позиция
         if (new_x, new_y) not in occupied_positions:
-            # Обновляем позиции в словаре
-            del occupied_positions[(x, y)]
-            occupied_positions[(new_x, new_y)] = self
+            # Удаляем старую позицию из множества занятых позиций
+            occupied_positions.remove((x, y))
             self.position = new_x, new_y
+            # Добавляем новую позицию в множество занятых позиций
+            occupied_positions.add((new_x, new_y))
+
             # Проверяем наличие еды и обновляем уровень энергии
             if (new_x, new_y) in food_positions:
+                food_positions.remove((new_x, new_y))
                 self.food += 1
                 self.food = min(self.food, self.MAX_ENERGY)  # Ограничиваем максимальное количество энергии
                 print("Поглотил еду")
-                food_positions.remove((new_x, new_y))
-            dir_index = (self.ptr + 2) % len(self.genome)
-            self.ptr = (self.ptr + self.genome[dir_index]) % len(self.genome)
+
+        dir_index = (self.ptr + 2) % len(self.genome)
+        self.ptr = (self.ptr + self.genome[dir_index]) % len(self.genome)
             
-        else:
-            dir_index = (self.ptr + 3) % len(self.genome)
-            self.ptr = (self.ptr + self.genome[dir_index]) % len(self.genome)
 
             
         # функция поворота (НЕреализованно)
@@ -271,23 +271,29 @@ while True:
             
     # Фильтрация ботов с энергией >= 0
     bots = [bot for bot in bots if bot.food >= 0]
-           
+    for bot in bots:
+        if bot.food < 0:
+            occupied_positions.remove(bot.position)  # Удаляем позицию умершего бота
+       
     # Обновление словаря занятых позиций после удаления ботов
-    occupied_positions = {(bot.position[0], bot.position[1]): bot for bot in bots}
+    occupied_positions = set((bot.position[0], bot.position[1]) for bot in bots)
+
     
     # Обновляем состояние каждого бота и фильтруем тех, кто может размножаться
     # Генератор для активных ботов, которые могут двигаться и размножаться
     active_bots = (bot for bot in bots if bot.food >= 0 and bot.is_space_to_reproduce(occupied_positions))
+    bots_ready_for_reproduction = [bot for bot in bots if bot.food > 1000 and bot.is_space_to_reproduce(occupied_positions)]
 
     for bot in active_bots:
         bot.execute_genome(occupied_positions, food_positions)
 
         # Если бот готов к размножению, пытаемся создать нового бота
-        if bot.food > 1000:
-            new_bot = bot.reproduce(occupied_positions)
-            if new_bot:
-                new_bots.append(new_bot)
-                occupied_positions[new_bot.position] = new_bot
+    for bot in bots_ready_for_reproduction:
+        new_bot = bot.reproduce(occupied_positions)
+        if new_bot:
+            new_bots.append(new_bot)
+            occupied_positions.add(new_bot.position)  # Добавляем позицию нового бота
+
 
     # Случайное появление еды
     if random.random() < 0.3:  # 30% вероятность
