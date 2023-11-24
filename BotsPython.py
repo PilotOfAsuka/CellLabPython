@@ -8,11 +8,11 @@ pygame.init()
 
 # Константы
 WIDTH, HEIGHT = 800, 800
-CELL_SIZE = 5 # размер клетки изменяя этот параметр меняется масштаб
+CELL_SIZE = 2 # размер клетки изменяя этот параметр меняется масштаб
 GRID_SIZE = WIDTH // CELL_SIZE
 cycle_count = 0
 max_temperature_change = 20  # Максимальное изменение температуры
-base_temperature = 5  # Базовая температура
+base_temperature = 10  # Базовая температура
 
 # словарь направлений
 class Direction:
@@ -74,7 +74,7 @@ class BotGenome:
         
         # функция фотосинтеза
     def photosynthesis(self):
-        light_intensity = get_light_intensity(self.position[1])
+        light_intensity = get_light_intensity(self.position[1], cycle_count)
         self.food += 2 * light_intensity  # Увеличиваем энергию в зависимости от интенсивности света
         self.food = min(self.food, self.MAX_ENERGY)  # Ограничиваем максимальное количество энергии
         self.move_ptr()
@@ -161,7 +161,7 @@ class BotGenome:
         new_position = random.choice(free_positions)
 
         # Создаем нового бота в выбранной позиции
-        red_component = max(0, min(255, int(temperature * 10)))
+        red_component = max(0, min(255, int(temperature * 5)))
         new_color = (red_component, max(self.color[1] - 10, 0), 0)  # Новый цвет для бота
         new_bot = BotGenome(genome_size=len(self.genome), food=self.food // 2, x=new_position[0], y=new_position[1], color=new_color)
         self.food //= 2  # Делим энергию между родителем и потомком
@@ -191,26 +191,43 @@ class BotGenome:
 #>>>>>>отдельные функции<<<<<<<<<
 # функция расчёта потребления энергии от температуры
 def calculate_energy_cost(temperature, base_energy_cost):
-    optimal_temperature = 5  # Оптимальная температура
+    optimal_temperature = 10  # Оптимальная температура
     if temperature >= optimal_temperature:
         # Энергозатраты увеличиваются с понижением температуры ниже оптимальной
         energy_cost_multiplier = 1 + (optimal_temperature - temperature) * 0.05
     else:
         # Энергозатраты увеличиваются ещё сильнее при очень низких температурах
-        energy_cost_multiplier = 1 + (optimal_temperature - temperature) * 0.5
+        energy_cost_multiplier = 1 + (optimal_temperature - temperature) * 0.2
 
     return base_energy_cost * energy_cost_multiplier
-
+# функция получения сезона
+def draw_season_info(season):
+    season_text = font.render(f'Сезон: {season}', True, WHITE)
+    screen.blit(season_text, (10, 70))  # Поместите текст в нужное место на экране
+def get_current_season(cycle_count, season_length=450):
+    season_phase = (cycle_count % season_length) / season_length
+    if 0 <= season_phase < 0.25:
+        return "Весна"
+    elif 0.25 <= season_phase < 0.5:
+        return "Лето"
+    elif 0.5 <= season_phase < 0.75:
+        return "Осень"
+    else:
+        return "Зима"
+    
 # Функция для обновления температуры
 def update_temperature(cycle_count):
     global temperature
-    # Изменяем температуру по синусоиде
-    temperature = base_temperature + max_temperature_change * math.sin(math.radians(cycle_count))
+    season_length = 450  # Длина сезонного цикла
+    season_phase = (cycle_count % season_length) / season_length
+    seasonal_temperature_variation = max_temperature_change * math.sin(season_phase * 2 * math.pi)  # Сезонное изменение температуры
+    temperature = base_temperature + seasonal_temperature_variation
     temperature = int(temperature)
     return temperature
 
+
 def draw_bot_count(bots):
-    count_text = font.render(f'Количество клеток: {len(bots)}', True, BLACK)
+    count_text = font.render(f'Количество клеток: {len(bots)}', True, WHITE)
     screen.blit(count_text, (10, 30))  # Меняйте положение текста при необходимости
 
 # функция отрисовки еды
@@ -227,20 +244,24 @@ def draw_bots(bots):
         pygame.draw.rect(screen, bot.color, rect)
 
 # функция интенсивности света
-def get_light_intensity(y):
-    # интенсивность уменьшается от верха к низу
-    return max(1, GRID_SIZE - y)
+def get_light_intensity(y, cycle_count):
+    season_length = 450  # Длина сезонного цикла
+    season_phase = (cycle_count % season_length) / season_length
+    season_intensity = math.sin(season_phase * 2 * math.pi)  # Синусоидальная функция для имитации сезонов
+    vertical_intensity = max(1, GRID_SIZE - y)  # Изначальная логика
+    return vertical_intensity * (0.5 * season_intensity + 0.5)
+
 
 font = pygame.font.SysFont(None, 24)  # Выберите подходящий шрифт и размер
 
 # функция подсчета циклов
 def draw_cycle_count(cycle_count):
-    text = font.render(f'Циклов: {cycle_count}', True, BLACK)
+    text = font.render(f'Циклов: {cycle_count}', True, WHITE)
     screen.blit(text, (10, 10))  # Размещение текста в левом верхнем углу
 
 # функция подсчета темпeратуры
 def draw_temp_count(temperature):
-    text = font.render(f'Темпeратура: {temperature}', True, BLACK)
+    text = font.render(f'Темпeратура: {temperature}', True, WHITE)
     screen.blit(text, (10, 50))  # Размещение текста в левом верхнем углу
 
 # функция генерации позиции еды зависищая от высоты
@@ -263,6 +284,7 @@ food_positions = ()
 while True:
     food_positions = set(food_cells)
     update_temperature(cycle_count)  # Обновляем температуру
+    current_season = get_current_season(cycle_count) #Обновляем сезон
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -283,10 +305,12 @@ while True:
     # Генератор для активных ботов, которые могут двигаться и размножаться
     active_bots = (bot for bot in bots if bot.food >= 0 and bot.is_space_to_reproduce(occupied_positions))
     bots_ready_for_reproduction = [bot for bot in bots if bot.food > 1000 and bot.is_space_to_reproduce(occupied_positions)]
-
+    un_active_bots = (bot for bot in bots if bot.food >= 0 and not bot.is_space_to_reproduce(occupied_positions))
     for bot in active_bots:
         bot.execute_genome(occupied_positions, food_positions)
-
+    for bot in un_active_bots:
+        bot.food -= 1
+        
         # Если бот готов к размножению, пытаемся создать нового бота
     for bot in bots_ready_for_reproduction:
         new_bot = bot.reproduce(occupied_positions)
@@ -319,6 +343,7 @@ while True:
     draw_cycle_count(cycle_count)
     draw_bot_count(bots)
     draw_temp_count(temperature)
+    draw_season_info(current_season)
     pygame.display.flip()
     print(f'Цикл номер: {cycle_count}')
     pygame.time.delay(100)  # Задержка в 100 миллисекунд
