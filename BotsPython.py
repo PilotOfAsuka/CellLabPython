@@ -17,23 +17,26 @@ font = pygame.font.SysFont(None, 24)  # Выберите подходящий ш
 
 # Константы
 WIDTH, HEIGHT = 800, 800
-CELL_SIZE = 2 # размер клетки изменяя этот параметр меняется масштаб
+CELL_SIZE = 5 # размер клетки изменяя этот параметр меняется масштаб
 GRID_SIZE_W = WIDTH // CELL_SIZE
 GRID_SIZE_H = HEIGHT // CELL_SIZE
 cycle_count = 0
 max_temperature_change = 15  # Максимальное изменение температуры
 base_temperature = 5  # Базовая температура
 START_NUM_OF_CELL = 30 # Количество начальных клеток
-Gen_size = 64 #Размер гена
+gen_size = 64 #Размер гена
 
 # кортеж направлений
 move_actions = (
     (0, -1),  # Вверх
+    (1,-1),   # Вверх и вправо
     (1, 0),  # Вправо
+    (1, 1),  # Вправо и вниз
     (0, 1),  # Вниз
-    (-1, 0)  # Влево
+    (-1, 1), # Вниз и лево
+    (-1, 0),  # Влево
+    (-1, -1)  # Влево и вверх
 )
-
 #>>>>>>>>>>><<<<<<<<<<<
 
 # Настройка окна
@@ -55,15 +58,15 @@ class Food:
     
 # Класс BotGenome, определяющий поведение и свойства бота
 class BotGenome:
-    def __init__(self, world, food = 500, x = 0, y = 0, color=(0, 255, 0), genome=[random.randint(0, 63) for _ in range(Gen_size)]):
+    def __init__(self, world, food = 500, x = 0, y = 0, color=(0, 255, 0), genome=None):
         # Инициализация генома с заданным размером
         self.world = world
-        self.genome = genome
+        self.genome = [random.randint(0, 63) for _ in range(gen_size)] if genome is None else genome
         self.ptr = 0  # УТК (указатель текущей команды)
         self.food = food
         self.position = (x, y)
         self.color = color
-    MAX_ENERGY = 2100  # Максимальный уровень энергии для бота
+    MAX_ENERGY = 1100  # Максимальный уровень энергии для бота
 
         # функция выполнения генома
     def execute_genome(self):
@@ -74,7 +77,7 @@ class BotGenome:
         if self.food < 0:
             x, y = self.position
             self.world.world_grid[y][x] = None  # Удаление бота из сетки
-        if self.food >= 2000:
+        if self.food >= 1000:
             self.reproduce()
 
         # функция выполнений команд
@@ -113,7 +116,7 @@ class BotGenome:
     def move(self):
         # Модификация для движения бота
         move_dir_index = (self.ptr + 1) % len(self.genome)
-        move_dir = self.genome[move_dir_index] % 4  # Теперь у нас только 4 направления
+        move_dir = self.genome[move_dir_index] % len(move_actions) # выбираем направление на основе смещения
         dx, dy = move_actions[move_dir]  # Получаем смещение
 
         # Обновление позиции бота
@@ -185,16 +188,7 @@ class BotGenome:
     def get_free_adjacent_positions(self):
         x, y = self.position
         free_positions = []
-        for dx, dy in (
-                (-1, -1),
-                (0, -1),
-                (1, -1),
-                (1, 0),
-                (1, 1),
-                (0, 1),
-                (-1, 1),
-                (-1, 0),
-        ):
+        for dx, dy in move_actions:
             nx = (x + dx) % GRID_SIZE_W
             ny = y + dy if -1 < y + dy < GRID_SIZE_H else y
             if self.world.world_grid[ny][nx] is None:
