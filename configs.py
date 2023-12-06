@@ -2,25 +2,29 @@ import func
 import genome
 import pygame
 # Установка размеров окна
-size = width, height = 800, 800
+size = width, height = 1000, 800
 screen = pygame.display.set_mode(size)
-FPS = 60
+FPS = 60 # Ограничиваем кол-во FPS 
+
 # Мир теперь состоит из клеточек
-CELL_SIZE = 3 # размер клетки изменяя этот параметр меняется масштаб
-GRID_SIZE_W = width // CELL_SIZE
-GRID_SIZE_H = height // CELL_SIZE
-START_NUM_OF_CELL = 100
+CELL_SIZE = 2 # Размер клетки изменяя этот параметр меняется масштаб
+GRID_SIZE_W = (width - 200) // CELL_SIZE # Задаем ширину сетки мира (-200 Это отступ для интерфеса)
+GRID_SIZE_H = height // CELL_SIZE # Задаем высоту сетки мира 
+START_NUM_OF_CELL = 100 # Стартовое число клеток при создании мира 
+gen_size = 64 # Размер гена
+
+
 # Инициализация двумерного массива мира
-world_grid = [[None for _ in range(GRID_SIZE_W)] for _ in range(GRID_SIZE_H)]
+world_grid = [[None for _ in range(GRID_SIZE_W)] for _ in range(GRID_SIZE_H)] # Мир в котором живут клетки
+
+# Инициализация начальных клеток в мире
 for _ in range(START_NUM_OF_CELL):
     x, y = func.random_position(world_grid)
-    bot = genome.BotGenome(world_grid ,x=x, y=y)
+    bot = genome.BotGenome(x=x, y=y)
     world_grid[y][x] = bot
-    
-    
-    
-# кортеж направлений
-move_actions = (
+ 
+# Кортеж направлений
+move_directions = (
     (0, -1),  # Вверх
     (1,-1),   # Вверх и вправо
     (1, 0),  # Вправо

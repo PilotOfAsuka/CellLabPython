@@ -18,13 +18,14 @@ class App:
 
     # Активация и отрисовка графической части окна            
     def draw(self):
-        self.screen.fill(colors.BKG_color)  
+        self.screen.fill(colors.BKG_COLOR)  
         self.surface.draw_objs()
         
     # Основной цикл       
     def loop(self):
         while self.run:
-            self.draw()
             self.event()
-            pygame.display.flip() # из за этой стройки мучался блин , черный экран был
-            main.clock.tick(cfg.FPS)# ФПС ННАДА!!
+            surface.Surface.update_surface()
+            self.draw()
+            pygame.display.flip() 
+            main.clock.tick(cfg.FPS)# FPS
