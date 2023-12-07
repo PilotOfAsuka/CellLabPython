@@ -3,7 +3,7 @@ import configs as cfg
 import colors as c
 import main
 import pygame
-
+import genome
 # Класс Slider
 class Slider:
     def __init__(self, x, y, w, h, min_val, max_val):
@@ -52,3 +52,4 @@ def draw_gui():
     # Отрисовка текста "Скорость"
     draw_text("Скорость цикла","",cfg.width - cfg.gui_ofset + gui_ofset_x , gui_ofset_y + line_text_ofset * 3)
     speed_slider.draw(cfg.screen)
+    draw_text("Tемп.:",genome.temp,cfg.width - cfg.gui_ofset + gui_ofset_x , gui_ofset_y + line_text_ofset * 5)
