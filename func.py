@@ -56,8 +56,9 @@ def weather_simulation(world_size_x, world_size_y, cycle, organic_amount):
     temperature = np.clip(base_temperature + food_temperature_effect, -15, 15)
 
     # Положение солнца зависит от цикла, оно движется от левого верхнего до правого нижнего угла
-    sun_x = (cycle % world_size_x)
-    sun_y = (cycle % world_size_y)
+    change_every = 100  # изменять каждые _ циклов
+    sun_x = (cycle // change_every) % world_size_x
+    sun_y = (cycle // change_every) % world_size_y
 
     # Сила освещенности зависит от положения солнца (простое представление)
     illumination = np.clip(100 - (abs(sun_x - world_size_x/2) + abs(sun_y - world_size_y/2)), 0, 100)
