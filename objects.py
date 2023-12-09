@@ -1,4 +1,3 @@
-import pygame
 import colors as c
  
 # Класс еды просто болванка
