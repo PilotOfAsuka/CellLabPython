@@ -54,7 +54,6 @@ class BotGenome:
     # Функция фотосинтеза
     def photosynthesis(self):
         illumination, sun_dist = self.food_consumption()
-        print(sun_dist)
         # Логика получения энергии при фотосинтезе
         self.food += func.normalize_value(sun_dist, 250, 0, 1, 50)
         # Ограничиваем максимальное количество энергии

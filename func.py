@@ -24,7 +24,7 @@ def get_free_adjacent_positions(position, world_grid):
     x, y = position
     free_positions = []
     for dx, dy in cfg.move_directions:
-        nx = (x + dx) % cfg.GRID_SIZE_W
+        nx = x + dx if -1 < x + dx < cfg.GRID_SIZE_W else x
         ny = y + dy if -1 < y + dy < cfg.GRID_SIZE_H else y
         if world_grid[ny][nx] is None:
             free_positions.append((nx, ny))
