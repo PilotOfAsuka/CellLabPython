@@ -75,5 +75,11 @@ def normalize_value(input_value, original_min, original_max, target_min, target_
     # Преобразуем исходное значение в диапазоне от 0 до 1
     normalized = (input_value - original_min) / (original_max - original_min)
     # Преобразуем нормализованное значение в целевой диапазон
-    return normalized * (target_max - target_min) + target_min
+    return int(normalized * (target_max - target_min) + target_min)
+
+def euclidean_distance(point1, point2):
+    x1, y1 = point1
+    x2, y2 = point2
+    distance = np.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2)
+    return int(distance)
 
