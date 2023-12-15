@@ -66,10 +66,11 @@ def weather_simulation(world_size_x, world_size_y, cycle, organic_amount):
     return temperature, illumination, (sun_x, sun_y)
 
 def update_weather():
-    temperature, illumination, sun_coord = weather_simulation(cfg.GRID_SIZE_W,cfg.GRID_SIZE_H, count_of_cicle,count_of_food)
+    temperature, illumination, sun_coord = weather_simulation(cfg.GRID_SIZE_W,cfg.GRID_SIZE_H, count_of_cicle, count_of_food)
+    print(sun_coord)
     return int(temperature), int(illumination), sun_coord
 
-# функция чормализации значения один диапазон в другой (например кол-во потребления энергии от 0 до 200 зависит от температуры, или другого значенмия)
+# функция нормализации значения один диапазон в другой (например кол-во потребления энергии от 0 до 200 зависит от температуры, или другого значенмия)
 def normalize_value(input_value, original_min, original_max, target_min, target_max):
     
     # Преобразуем исходное значение в диапазоне от 0 до 1

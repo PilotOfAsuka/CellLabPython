@@ -10,7 +10,7 @@ temp, illumination, sun_coord = 0, 0, (0, 0)
 
 
 class BotGenome:
-    def __init__(self, food=500, x=0, y=0, color=(0, 255, 0), genome=None):
+    def __init__(self, food=500, x=0, y=0, color=(0, 200, 0), genome=None):
         # Инициализация генома с заданным размером
         self.genome = [random.randint(0, 63) for _ in range(
             cfg.gen_size)] if genome is None else genome
@@ -30,7 +30,7 @@ class BotGenome:
             self.reproduce()
         elif self.food in range(1,1000):
             # За то что клетка думает она теряет энергию
-            self.food -= func.normalize_value(temp, -15, 15, 10, 5)
+            self.food -= func.normalize_value(temp, -15, 15, 5, 1)
             command = self.genome[self.ptr]  # УТК
             self.execute_command(command)  # Выполнение команды генома (УТК)
 
@@ -42,12 +42,14 @@ class BotGenome:
             self.photosynthesis()
         elif command in range(21, 25):
             self.move()
-        elif command == range(0, 9):
+        elif command in range(0, 9):
             self.how_many_food()
         elif command in range(26, 30):
             self.is_this_temp()
         elif command in range(31, 40):
             self.command_view()
+        elif command in range(41, 45):
+            self.how_much_distance_to_sun() 
         else:
             # Если у числа нет команды то происходит безусловный переход
             self.move_ptr_to()
@@ -55,9 +57,8 @@ class BotGenome:
 
     # Функция фотосинтеза
     def photosynthesis(self):
-        illumination, sun_dist = self.food_consumption()
         # Логика получения энергии при фотосинтезе
-        self.food += func.normalize_value(sun_dist, 250, 0, 1, 50)
+        self.food += func.normalize_value(func.euclidean_distance(self.position,sun_coord), 0, cfg.GRID_SIZE_W, 40, 0)
         # Ограничиваем максимальное количество энергии
         self.food = min(self.food, self.MAX_ENERGY)
         self.move_ptr()  # Переход УТК
@@ -80,6 +81,7 @@ class BotGenome:
 
     # функция движения клетки и проверки на столкновение
     def move(self):
+        self.food += func.normalize_value(func.euclidean_distance(self.position,sun_coord), 0, cfg.GRID_SIZE_W, 1, 10)
         # Модификация для движения бота
         move_dir_index = (self.ptr + 1) % len(self.genome)  # Индекс смещения
         # Выбираем направление на основе смещения
@@ -204,7 +206,12 @@ class BotGenome:
         elif isinstance(surface.world_grid[new_y][new_x], Predator):
             dir_index = (self.ptr + 24)  % len(self.genome)
             self.ptr = (self.ptr + self.genome[dir_index]) % len(self.genome)
-
+            
+    def how_much_distance_to_sun(self):
+        sun_dist = func.normalize_value(func.euclidean_distance(self.position, sun_coord),0,cfg.GRID_SIZE_H, 0,64)
+        dir_index = (self.ptr + sun_dist)  % len(self.genome)
+        self.ptr = (self.ptr + self.genome[dir_index]) % len(self.genome)
+        
         
 
 class Predator(BotGenome):
@@ -227,15 +234,16 @@ class Predator(BotGenome):
         
     def execute_command(self, command):
         # Выполнение команды в зависимости от числа
-
         if command in range(0, 15):
             self.move()
-        elif command == range(16, 30):
+        elif command in range(16, 30):
             self.how_many_food()
         elif command in range(31, 40):
             self.is_this_temp()
         elif command in range(41, 50):
             self.command_view()
+        elif command in range(51, 55):
+            self.how_much_distance_to_sun()
         else:
             # Если у числа нет команды то происходит безусловный переход
             self.move_ptr_to()
@@ -243,7 +251,7 @@ class Predator(BotGenome):
         
     # функция движения клетки и проверки на столкновение
     def move(self):
-        self.food -= func.normalize_value(temp, -15, 15, 40, 30)
+        self.food -= 10
         # Модификация для движения бота
         move_dir_index = (self.ptr + 1) % len(self.genome)  # Индекс смещения
         # Выбираем направление на основе смещения
@@ -287,9 +295,10 @@ class Predator(BotGenome):
             # Перемещаем бота на новую позицию
             surface.world_grid[new_y][new_x] = self
             self.position = new_x, new_y
-            self.food += 100  # Логика расхода энергии
+            self.food += 70  # Логика расхода энергии
             dir_index = (self.ptr + 24) % len(self.genome)
             self.ptr = (self.ptr + self.genome[dir_index]) % len(self.genome)
+            
         elif isinstance(surface.world_grid[new_x][new_y], Predator):
             dir_index = (self.ptr + 59) % len(self.genome)
             self.ptr = (self.ptr + self.genome[dir_index]) % len(self.genome)
