@@ -31,7 +31,6 @@ class Slider:
     
 gui_ofset_x, gui_ofset_y = 10, 0 # Отступы от края ГУИ  
 line_text_ofset = 30 # Высота строки
-
 count_of_cell = 0 # Счетчик кол-во клеток
 count_of_food = 0 # Счетчик кол-во органики
 count_of_cicle = 0 # Счетчик кол-во циклов
@@ -42,14 +41,24 @@ def draw_text(text, var,x, y):
     count_text = main.font.render(text +" "+ str(var), True, c.WHITE)
     cfg.screen.blit(count_text, (x,y))
 
+def draw_sun_cord():
+    pygame.draw.line(cfg.screen, c.BLACK, (genome.sun_coord[0],0), (genome.sun_coord[0], cfg.height), width=1)
+    pygame.draw.line(cfg.screen, c.BLACK, (0,genome.sun_coord[0]), (cfg.width-cfg.gui_ofset, genome.sun_coord[0]), width=1)
+
+def draw_border():
+    rect = pygame.Rect(0, 0, cfg.width - cfg.gui_ofset, cfg.height)
+    pygame.draw.rect(cfg.screen, c.BLACK, rect, width=2)
+
 def draw_gui():
     # Отрисовка текста кол-ва клеток
-    draw_text("Клетки:",count_of_cell,cfg.width - cfg.gui_ofset + gui_ofset_x , gui_ofset_y) # (Текст, Переменная(для счета), х,y)
+    draw_text("Cells:",count_of_cell,cfg.width - cfg.gui_ofset + gui_ofset_x , gui_ofset_y) # (Текст, Переменная(для счета), х,y)
     # Отрисовка текста кол-ва органики
-    draw_text("Органика:", count_of_food,cfg.width - cfg.gui_ofset + gui_ofset_x , gui_ofset_y + line_text_ofset)  # Меняйте положение текста при необходимости
+    draw_text("Organic:", count_of_food,cfg.width - cfg.gui_ofset + gui_ofset_x , gui_ofset_y + line_text_ofset)  # Меняйте положение текста при необходимости
     # Отрисовка текста кол-ва циклов
-    draw_text("Цикл:", count_of_cicle,cfg.width - cfg.gui_ofset + gui_ofset_x , gui_ofset_y + line_text_ofset * 2)  # Меняйте положение текста при необходимости
+    draw_text("Cycle:", count_of_cicle,cfg.width - cfg.gui_ofset + gui_ofset_x , gui_ofset_y + line_text_ofset * 2)  # Меняйте положение текста при необходимости
     # Отрисовка текста "Скорость"
-    draw_text("Скорость цикла","",cfg.width - cfg.gui_ofset + gui_ofset_x , gui_ofset_y + line_text_ofset * 3)
+    draw_text("Speed","",cfg.width - cfg.gui_ofset + gui_ofset_x , gui_ofset_y + line_text_ofset * 3)
     speed_slider.draw(cfg.screen)
-    draw_text("Tемп.:",genome.temp,cfg.width - cfg.gui_ofset + gui_ofset_x , gui_ofset_y + line_text_ofset * 5)
+    draw_text("Temp.:",genome.temp,cfg.width - cfg.gui_ofset + gui_ofset_x , gui_ofset_y + line_text_ofset * 5)
+    draw_border()
+    draw_sun_cord()

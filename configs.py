@@ -1,5 +1,6 @@
 
 import pygame
+import math
 # Установка размеров окна
 size = width, height = 1000, 800
 screen = pygame.display.set_mode(size)
@@ -14,6 +15,7 @@ GRID_SIZE_H = height // CELL_SIZE # Задаем высоту сетки мир�
 START_NUM_OF_CELL = 500 # Стартовое число клеток при создании мира 
 gen_size = 64 # Размер гена
  
+world_size = math.sqrt(height**2 + (width - gui_ofset)**2)
 # Кортеж направлений
 move_directions = (
     (0, -1),  # Вверх

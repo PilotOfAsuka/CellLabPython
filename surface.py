@@ -12,10 +12,6 @@ for _ in range(cfg.START_NUM_OF_CELL):
     x, y = func.random_position(world_grid)
     bot = genome.Cell(x=x, y=y)
     world_grid[y][x] = bot
-for _ in range(cfg.START_NUM_OF_CELL):
-    x, y = func.random_position(world_grid)
-    bot = genome.Predator(x=x, y=y)
-    world_grid[y][x] = bot
     
 # Класс Surface определяет мир или же поверхноть для отрисовки
 class Surface:
