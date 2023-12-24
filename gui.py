@@ -27,7 +27,7 @@ class Slider:
     def draw(self, screen):
         pygame.draw.rect(screen, c.WHITE, self.rect)
         slider_pos = int((self.val - self.min_val) / (self.max_val - self.min_val) * self.rect.width)
-        pygame.draw.rect(screen, c.FOOD_COLOR, (self.rect.x + slider_pos - 10, self.rect.y, 20, self.rect.height))
+        pygame.draw.rect(screen, c.FOOD_COLOR, (self.rect.x + slider_pos, self.rect.y, 20, self.rect.height))
     
 gui_ofset_x, gui_ofset_y = 10, 0 # Отступы от края ГУИ  
 line_text_ofset = 30 # Высота строки
@@ -35,7 +35,7 @@ count_of_cell = 0 # Счетчик кол-во клеток
 count_of_food = 0 # Счетчик кол-во органики
 count_of_cicle = 0 # Счетчик кол-во циклов
 
-speed_slider = Slider(cfg.width - cfg.gui_ofset + gui_ofset_x, gui_ofset_y + 10 + line_text_ofset * 4, 190 - gui_ofset_x, 10, 1, 60)
+speed_slider = Slider(cfg.width - cfg.gui_ofset + gui_ofset_x, gui_ofset_y + 15 + line_text_ofset * 4, 190 - gui_ofset_x, 10, 1, 60)
 
 def draw_text(text, var,x, y):
     count_text = main.font.render(text +" "+ str(var), True, c.WHITE)
