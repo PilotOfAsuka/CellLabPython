@@ -10,8 +10,9 @@ world_grid = [[None for _ in range(cfg.GRID_SIZE_W)] for _ in range(cfg.GRID_SIZ
 # Инициализация начальных клеток в мире
 for _ in range(cfg.START_NUM_OF_CELL):
     x, y = func.random_position(world_grid)
-    bot = genome.BotGenome(x=x, y=y)
+    bot = genome.Cell(x=x, y=y)
     world_grid[y][x] = bot
+    
 # Класс Surface определяет мир или же поверхноть для отрисовки
 class Surface:
     def __init__(self, surface):
