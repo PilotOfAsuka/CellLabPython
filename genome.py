@@ -60,7 +60,7 @@ class BotGenome:
     # Функция фотосинтеза
     def photosynthesis(self):
         # Логика получения энергии при фотосинтезе
-        self.food += func.normalize_value(func.euclidean_distance(self.screen_position,sun_coord), 0, cfg.world_size, 10,0)
+        self.food += func.normalize_value(func.euclidean_distance(self.screen_position,sun_coord), 0, cfg.height, 10,-1)
         # Ограничиваем максимальное количество энергии
         self.food = min(self.food, self.MAX_ENERGY)
         self.move_ptr()  # Переход УТК
@@ -93,9 +93,7 @@ class BotGenome:
 
     # Опрос какая сейчас темпeрартура
     def is_this_temp(self):
-        temp_index = (
-            self.ptr + func.normalize_value(temp, -15, 15, 30, 0)) % len(self.genome)
-        self.ptr = (self.ptr + self.genome[temp_index]) % len(self.genome)
+        self.ptr =get_next_index(self, step=func.normalize_value(temp, -15, 15, 30, 0))
         
     # Команда посмотреть    
     def command_view(self):
@@ -107,28 +105,23 @@ class BotGenome:
         x, y = self.position
         new_x = (x + dx) % cfg.GRID_SIZE_W
         new_y = (y + dy) % cfg.GRID_SIZE_H
-        
+        # Если на пути пусто
         if surface.world_grid[new_y][new_x] is None:
-            dir_index = (self.ptr + 2)  % len(self.genome)
-            self.ptr = (self.ptr + self.genome[dir_index]) % len(self.genome)
-
+            self.ptr = get_next_index(self, step=2)
+        # Если на пути органика
         elif isinstance(surface.world_grid[new_y][new_x], objs.Food):
-            dir_index = (self.ptr + 43)  % len(self.genome)
-            self.ptr = (self.ptr + self.genome[dir_index]) % len(self.genome)
-
+            self.ptr = get_next_index(self, step=43)
+        # Если на пути клетка
         elif isinstance(surface.world_grid[new_y][new_x], Cell):
-            dir_index = (self.ptr + 59)  % len(self.genome)
-            self.ptr = (self.ptr + self.genome[dir_index]) % len(self.genome)
-
+            self.ptr = get_next_index(self,step=59)
+        # Если на пути хищник
         elif isinstance(surface.world_grid[new_y][new_x], Predator):
-            dir_index = (self.ptr + 24)  % len(self.genome)
-            self.ptr = (self.ptr + self.genome[dir_index]) % len(self.genome)
+            self.ptr = get_next_index(self, step=24)
             
-    # Функция расстояния до солнца      
+    # Функция опроса расстояния до солнца и смещения  
     def how_much_distance_to_sun(self):
         sun_dist = func.normalize_value(func.euclidean_distance(self.screen_position, sun_coord),0,cfg.world_size, 0,64)
-        dir_index = (self.ptr + sun_dist)  % len(self.genome)
-        self.ptr = (self.ptr + self.genome[dir_index]) % len(self.genome)
+        self.ptr = get_next_index(self, step=sun_dist)
         
         
 
@@ -169,11 +162,11 @@ class Predator(BotGenome):
         
     # функция движения клетки и проверки на столкновение
     def move(self):
+        # Логика расхода энергии
         self.food -= func.normalize_value(temp, -15, 15, 10, 1)
-        # Модификация для движения бота
-        move_dir_index = (self.ptr + 1) % len(self.genome)  # Индекс смещения
         # Выбираем направление на основе смещения
-        move_dir = self.genome[move_dir_index] % len(cfg.move_directions)
+        move_dir = get_index_of_bias(self, step=1, len_of_number=len(cfg.move_directions))
+        
         dx, dy = cfg.move_directions[move_dir]  # Получаем Направление
 
         # Обновление позиции бота
@@ -189,7 +182,7 @@ class Predator(BotGenome):
             surface.world_grid[new_y][new_x] = self
             self.position = new_x, new_y
             # Уменьшение количества еды бота за движение
-            # Логика расхода энергии
+            
             
         # Если куда хочет шагнуть клетка есть еда
         elif isinstance(surface.world_grid[new_y][new_x], objs.Food):
@@ -201,8 +194,8 @@ class Predator(BotGenome):
             surface.world_grid[new_y][new_x] = self
             self.position = new_x, new_y
             self.food += 1  # Логика расхода энергии
-            dir_index = (self.ptr + 43)  % len(self.genome)
-            self.ptr = (self.ptr + self.genome[dir_index]) % len(self.genome)
+            
+            self.ptr = get_next_index(self, step=43)
 
         # Если куда хочет шагнуть клетка есть клетка
         elif isinstance(surface.world_grid[new_y][new_x], Cell):
@@ -214,12 +207,11 @@ class Predator(BotGenome):
             surface.world_grid[new_y][new_x] = self
             self.position = new_x, new_y
             self.food += 10  # Логика расхода энергии
-            dir_index = (self.ptr + 24) % len(self.genome)
-            self.ptr = (self.ptr + self.genome[dir_index]) % len(self.genome)
             
+            self.ptr = get_next_index(self, step=24)
+        # Если куда хочет шагнуть клетка есть хищник   
         elif isinstance(surface.world_grid[new_x][new_y], Predator):
-            dir_index = (self.ptr + 59) % len(self.genome)
-            self.ptr = (self.ptr + self.genome[dir_index]) % len(self.genome)
+            self.ptr = get_next_index(self, step=59)
 
     # функция деления
     def reproduce(self):
@@ -259,10 +251,8 @@ class Cell(BotGenome):
     def move(self):
         # Логика расхода энергии
         self.food -= func.normalize_value(temp, -15, 15, 10, 5)
-        # Модификация для движения бота
-        move_dir_index = (self.ptr + 1) % len(self.genome)  # Индекс смещения
         # Выбираем направление на основе смещения
-        move_dir = self.genome[move_dir_index] % len(cfg.move_directions)
+        move_dir = get_index_of_bias(self, step=1,len_of_number=len(cfg.move_directions))
         dx, dy = cfg.move_directions[move_dir]  # Получаем Направление
 
         # Обновление позиции бота
@@ -288,17 +278,16 @@ class Cell(BotGenome):
             surface.world_grid[new_y][new_x] = self
             self.position = (new_x, new_y)
             self.food += 1  # Логика расхода энергии
-            dir_index = (self.ptr + 43 + int(func.normalize_value(self.food, 0, 1000, 1, 10))) % len(self.genome)
-            self.ptr = (self.ptr + self.genome[dir_index]) % len(self.genome)
+            
+            self.ptr = get_next_index(self, step=43 + int(func.normalize_value(self.food, 0, 1000, 1, 10)))
 
         # Если куда хочет шагнуть клетка есть такая же клетка
         elif isinstance(surface.world_grid[new_y][new_x], Cell):
-            dir_index = (self.ptr + 59) % len(self.genome)
-            self.ptr = (self.ptr + self.genome[dir_index]) % len(self.genome)
-        
+            self.ptr = get_next_index(self, step=59)
+            
+        # Если куда хочет шагнуть клетка есть хищник
         elif isinstance(surface.world_grid[new_y][new_x],Predator):
-            dir_index = (self.ptr + 24) % len(self.genome)
-            self.ptr = (self.ptr + self.genome[dir_index]) % len(self.genome)
+            self.ptr = get_next_index(self, step=24)
             
         # функция деления
     def reproduce(self):
@@ -329,14 +318,47 @@ class Cell(BotGenome):
             self.color[1] - 1, 90), self.color[2])  # Смещаем цвета
         
         self.count_of_reproduce += 1
-        if self.count_of_reproduce == 10:
+        
+        
+        if self.count_of_reproduce == 10 and get_index_of_bias(self, step=2, len_of_number=2) == 1:
             new_bot = Predator(food=self.food // 2, x=x, y=y,
                                 color=(230, 1, 92), genome=new_genome)  # Создание нового бота
-            surface.world_grid[y][x] = new_bot  # Помещаем ннового бота в мир
+            surface.world_grid[y][x] = new_bot  # Помещаем нового бота в мир
             self.food //= 4  # Разделяем энергию между родительской и дочерней клетки
         else:
             new_bot = Cell(food=self.food // 2, x=x, y=y,
                                 color=new_color, genome=new_genome)  # Создание нового бота
-            surface.world_grid[y][x] = new_bot  # Помещаем ннового бота в мир
+            surface.world_grid[y][x] = new_bot  # Помещаем нового бота в мир
             self.food //= 4  # Разделяем энергию между родительской и дочерней клетки 
 
+def get_index_of_bias(self, step, len_of_number):
+    """
+      Функция получения смещения
+    [...33,43,24,...]
+    [... 5, 6, 7,...]
+    Пример self.ptr = 5
+           step = 1
+           index = 6
+    Так как мы к self.ptr прибавили step и получили индекs смешение по гену 
+    len_of_number число ограничитель (К примеру если len_of_number является len(cfg.move_directions)
+    то мы получим значение ограниченное количеством направлений от числа в гене
+    43 % 8 - кол-во направлений = 3 - Вправо и низ)
+    """
+    index = (self.ptr + step) % len(self.genome)  # Индекс смещения
+    index_of_bias = self.genome[index] % len_of_number
+    return index_of_bias
+
+def get_next_index(self,step):
+    """
+    Функция получения следущего индекса смешения
+    используется для увеличения УТК на число полученное в смешении
+    [...33,43,24,...]
+    [... 5, 6, 7,...]
+    Пример self.ptr = 5
+           step = 1
+           index = 6
+    В данном примере УТК переместится на 43 (и остановится на 48) от позиции где он находился (Это self.ptr = 5)
+    """
+    index = (self.ptr + step) % len(self.genome)
+    ptr = (self.ptr + self.genome[index]) % len(self.genome)
+    return ptr
