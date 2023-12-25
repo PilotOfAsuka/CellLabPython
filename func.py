@@ -61,8 +61,8 @@ def weather_simulation(world_size_x, world_size_y, cycle):
 
     # Положение солнца зависит от цикла, оно движется от левого верхнего до правого нижнего угла
     change_every = 100  # изменять каждые _ циклов
-    sun_x = (cycle // change_every) % cfg.width
-    sun_y = (cycle // change_every) % (cfg.height-cfg.gui_ofset)
+    sun_x = (cycle // change_every) % cfg.width-cfg.gui_ofset
+    sun_y = (cycle // change_every) % cfg.height
 
     # Сила освещенности зависит от положения солнца (простое представление)
     illumination = np.clip(100 - (abs(sun_x - world_size_x/2) + abs(sun_y - world_size_y/2)), 0, 100)
