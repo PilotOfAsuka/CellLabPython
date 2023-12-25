@@ -44,10 +44,12 @@ def draw_obj(obj):
     rect = pygame.Rect(x * cfg.CELL_SIZE, y * cfg.CELL_SIZE, cfg.CELL_SIZE, cfg.CELL_SIZE)
     pygame.draw.rect(cfg.screen, obj.color, rect)
     
-# Функция погоды
-# Принимает размер мира, текущий цикл 
-# Возвращает Температуру, силу света, и положение солнца
-def weather_simulation(world_size_x, world_size_y, cycle):
+
+def weather_simulation(cycle):
+    """
+    На вход принимает текущий цикл
+    Возвращает Температуру и Положение солнца по х и у
+    """
     # Температура
     min_temp = -15 # Минимальное значение 
     max_temp = 15 # Максимальное значение
@@ -61,16 +63,13 @@ def weather_simulation(world_size_x, world_size_y, cycle):
 
     # Положение солнца зависит от цикла, оно движется от левого верхнего до правого нижнего угла
     change_every = 100  # изменять каждые _ циклов
-    sun_x = (cycle // change_every) % cfg.width-cfg.gui_ofset
+    sun_x = (cycle // change_every) % (cfg.width-cfg.gui_ofset)
     sun_y = (cycle // change_every) % cfg.height
 
-    # Сила освещенности зависит от положения солнца (простое представление)
-    illumination = np.clip(100 - (abs(sun_x - world_size_x/2) + abs(sun_y - world_size_y/2)), 0, 100)
-
-    return temp, illumination, (sun_x, sun_y)
+    return temp, (sun_x, sun_y)
 # Функция обновления погоды
 def update_weather():
-    temperature, illumination, sun_coord = weather_simulation(cfg.GRID_SIZE_W,cfg.GRID_SIZE_H, count_of_cicle)
+    temperature, illumination, sun_coord = weather_simulation(count_of_cicle)
     print(sun_coord)
     return int(temperature), int(illumination), sun_coord
 

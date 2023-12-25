@@ -60,7 +60,7 @@ class BotGenome:
     # Функция фотосинтеза
     def photosynthesis(self):
         # Логика получения энергии при фотосинтезе
-        self.food += func.normalize_value(func.euclidean_distance(self.screen_position,sun_coord), 0, cfg.height, 10,-1)
+        self.food += func.normalize_value(func.euclidean_distance(self.screen_position,sun_coord), 0, cfg.width, 15,-10)
         # Ограничиваем максимальное количество энергии
         self.food = min(self.food, self.MAX_ENERGY)
         self.move_ptr()  # Переход УТК
@@ -68,21 +68,14 @@ class BotGenome:
     # Функция команды "Сколько у меня еды?"
     def how_many_food(self):
         food_index = (self.ptr + 1 + func.normalize_value(temp, -15, 15, 5, 0)) % len(self.genome)  # Получаем смещение
-        
-        next_ptr_index = (self.ptr + 2) % len(self.genome)
-        
-        next_next_ptr_index = (self.ptr + 3) % len(self.genome)
-        
-        food_genome = self.genome[food_index] * 15  # Получаем условие перехода
+        food_genome = func.normalize_value(self.genome[food_index], 0, 63, 0, 1000)# Получаем условие перехода
 
         if self.food >= food_genome:
             # Если условие перехода меньше количеста собственной энергии
-            self.ptr = (
-                self.ptr + self.genome[next_ptr_index]) % len(self.genome)
+            self.ptr = get_next_index(self, step=2)
         else:
             # Если условие перехода больше количеста собственной энергии
-            self.ptr = (
-                self.ptr + self.genome[next_next_ptr_index]) % len(self.genome)
+            self.ptr = get_next_index(self, step=3)
 
     # Функция перемещения УТК
     def move_ptr_to(self):
@@ -129,7 +122,7 @@ class BotGenome:
             
     # Функция опроса расстояния до солнца и смещения  
     def how_much_distance_to_sun(self):
-        sun_dist = func.normalize_value(func.euclidean_distance(self.screen_position, sun_coord),0,cfg.height, 0,64)
+        sun_dist = func.normalize_value(func.euclidean_distance(self.screen_position, sun_coord),0,cfg.world_size, 0,64)
         # Перемещаем указатель текущей команды
         self.ptr = get_next_index(self, step=sun_dist)
         
