@@ -4,6 +4,13 @@ import func
 import objects as objs
 import surface
 
+food_values = {
+    'cell_thinks': {'min': 50, 'max': 30},  # Зависит от температуры
+    'photosynthesis': {'min': 100, 'max': -100},  # Зависит от расстояния до солнца
+    'predator_thinks': {'min': 10, 'max': 5},  # Зависит от температуры
+    'predator_move': {'min': 10, 'max': 5},  # Зависит от температуры
+    'cell_move': {'min': 10, 'max': 5},  # Зависит от температуры
+}
 
 temp, sun_coord = 0, (0, 0)
 # Класс BotGenome, определяющий поведение и свойства бота
@@ -24,15 +31,14 @@ class BotGenome:
 
     # функция выполнения генома
     def execute_genome(self):
-        # Проверка на смерть бота, если его пищи нет
-        if self.food <= 0:  # Условие смерти клетки при отрицательной энергии
-            x, y = self.position
-            surface.world_grid[y][x] = None  # Удаление бота из сетки
-        elif self.food >= 1000:  # Условие для деления клетки
+        self.check_death()
+        if self.food >= 1000:  # Условие для деления клетки
             self.reproduce()
         elif self.food in range(1, 1000):
             # За то что клетка думает, она теряет энергию
-            self.food -= func.normalize_value(temp, -15, 15, 50, 10)
+            self.food -= func.normalize_value(temp, -15, 15,
+                                              food_values['cell_thinks']['min'], food_values['cell_thinks']['max'])
+            self.check_death()
             command = self.genome[self.ptr]  # УТК
             self.execute_command(command)  # Выполнение команды генома (УТК)
 
@@ -60,7 +66,8 @@ class BotGenome:
     def photosynthesis(self):
         # Логика получения энергии при фотосинтезе
         self.food += func.normalize_value(func.euclidean_distance(self.screen_position, sun_coord),
-                                          0, cfg.width, 100, -50)
+                                          0, cfg.width, food_values['photosynthesis']['min'],
+                                          food_values['photosynthesis']['max'])
         # Ограничиваем максимальное количество энергии
         self.food = min(self.food, self.MAX_ENERGY)
         self.move_ptr()  # Переход УТК
@@ -126,7 +133,12 @@ class BotGenome:
                                         0, cfg.world_size, 0, 64)
         # Перемещаем указатель текущей команды
         self.ptr = get_next_index(self, step=sun_dist)
-        
+
+    def check_death(self):
+        if self.food <= 0:  # Условие смерти клетки при отрицательной энергии
+            x, y = self.position
+            surface.world_grid[y][x] = None  # Удаление бота из сетки
+
 
 class Predator(BotGenome):
     def __init__(self, food=800, x=0, y=0, color=(230, 1, 92), genome=None):
@@ -135,14 +147,14 @@ class Predator(BotGenome):
     # Функция выполнения генома
     def execute_genome(self):
         # Проверка на смерть бота, если его пищи нет
-        if self.food <= 0:  # Условие смерти клетки при отрицательной энергии
-            x, y = self.position
-            surface.world_grid[y][x] = None  # Удаление бота из сетки
-        elif self.food >= 1000:  # Условие для деления клетки
+        self.check_death()
+        if self.food >= 1000:  # Условие для деления клетки
             self.reproduce()
         elif self.food in range(1, 1000):
             # За то что клетка думает, она теряет энергию
-            self.food -= func.normalize_value(temp, -15, 15, 5, 1)
+            self.food -= func.normalize_value(temp, -15, 15, food_values['predator_thinks']['min'],
+                                              food_values['predator_thinks']['max'])
+            self.check_death()
             command = self.genome[self.ptr]  # УТК
             self.execute_command(command)  # Выполнение команды генома (УТК)
         
@@ -166,8 +178,9 @@ class Predator(BotGenome):
     # функция движения клетки и проверки на столкновение
     def move(self):
         # Логика расхода энергии
-        self.food -= func.normalize_value(temp, -15, 15, 10, 1)
-        
+        self.food -= func.normalize_value(temp, -15, 15, food_values['predator_move']['min'],
+                                          food_values['predator_move']['max'])
+        self.check_death()
         # Выбираем направление на основе смещения
         move_dir = get_index_of_bias(self, step=1, len_of_number=len(cfg.move_directions))
         # Получаем Направление
@@ -197,7 +210,7 @@ class Predator(BotGenome):
             # Перемещаем клетку
             move_cell(self, x, y, new_x, new_y)
             
-            self.food += 10  # Логика расхода энергии
+            self.food += 70  # Логика расхода энергии
             
             # Перемещаем УТК
             self.ptr = get_next_index(self, step=24)
@@ -243,7 +256,9 @@ class Cell(BotGenome):
     # функция движения клетки и проверки на столкновение
     def move(self):
         # Логика расхода энергии
-        self.food -= func.normalize_value(temp, -15, 15, 10, 5)
+        self.food -= func.normalize_value(temp, -15, 15, food_values['cell_move']['min'],
+                                          food_values['cell_move']['max'])
+        self.check_death()
         # Выбираем направление на основе смещения
         move_dir = get_index_of_bias(self, step=1, len_of_number=len(cfg.move_directions))
         dx, dy = cfg.move_directions[move_dir]  # Получаем Направление
@@ -265,7 +280,7 @@ class Cell(BotGenome):
             
             self.food += 1  # Логика расхода энергии
             # Перемещаем указатель текущей команды
-            self.ptr = get_next_index(self, step=43 + int(func.normalize_value(self.food, 0, 1000, 1, 10)))
+            self.ptr = get_next_index(self, step=43)
 
         # Если куда хочет шагнуть клетка есть такая же клетка
         elif isinstance(surface.world_grid[new_y][new_x], Cell):
