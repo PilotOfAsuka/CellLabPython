@@ -5,9 +5,6 @@ import numpy as np
 import math
 
 
-count_of_cell = 0 # Счетчик кол-во клеток
-count_of_food = 0 # Счетчик кол-во органики
-count_of_cicle = 0 # Счетчик кол-во циклов
 #Здесь можно хранить одиночные функции
 
 # Функция для генерации случайной свободной позиции
@@ -65,13 +62,8 @@ def weather_simulation(cycle):
     change_every = 100  # изменять каждые _ циклов
     sun_x = (cycle // change_every) % (cfg.width-cfg.gui_ofset)
     sun_y = (cycle // change_every) % cfg.height
+    return int(temp), (sun_x, sun_y)
 
-    return temp, (sun_x, sun_y)
-# Функция обновления погоды
-def update_weather():
-    temperature, illumination, sun_coord = weather_simulation(count_of_cicle)
-    print(sun_coord)
-    return int(temperature), int(illumination), sun_coord
 
 # функция нормализации значения один диапазон в другой (например кол-во потребления энергии от 0 до 200 зависит от температуры, или другого значенмия)
 def normalize_value(input_value, original_min, original_max, target_min, target_max):

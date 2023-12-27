@@ -29,11 +29,9 @@ class App:
     def loop(self):
         while self.run:
             self.event()
+            genome.temp, genome.sun_coord= func.weather_simulation(gui.count_of_cicle)
             surface.Surface.update_surface()
             self.draw()
-            gui.count_of_cicle += 1
-            func.count_of_cicle += 1
-            genome.temp, genome.sun_coord = func.update_weather()
             self.gui.draw_gui()
             pygame.display.flip() 
             main.clock.tick(gui.speed_slider.val)# FPS пока так топорно меняем скорость циклов :(

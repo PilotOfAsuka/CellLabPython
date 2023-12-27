@@ -5,15 +5,14 @@ import objects as objs
 import surface
 
 
-temp, illumination, sun_coord = 0, 0, (0, 0)
+temp, sun_coord = 0, (0, 0)
 # Класс BotGenome, определяющий поведение и свойства бота
 
 
 class BotGenome:
     def __init__(self, food=500, x=0, y=0, color=(148, 255, 204), genome=None):
         # Инициализация генома с заданным размером
-        self.genome = [random.randint(0, 63) for _ in range(
-            cfg.gen_size)] if genome is None else genome
+        self.genome = [random.randint(0, 63) for _ in range(cfg.gen_size)] if genome is None else genome
         self.ptr = 0  # УТК (указатель текущей команды)
         self.food = food
         self.position = x, y
@@ -33,7 +32,7 @@ class BotGenome:
             self.reproduce()
         elif self.food in range(1,1000):
             # За то что клетка думает она теряет энергию
-            self.food -= func.normalize_value(temp, -15, 15, 5, 1)
+            self.food -= func.normalize_value(temp, -15, 15, 50, 10)
             command = self.genome[self.ptr]  # УТК
             self.execute_command(command)  # Выполнение команды генома (УТК)
 
@@ -60,7 +59,7 @@ class BotGenome:
     # Функция фотосинтеза
     def photosynthesis(self):
         # Логика получения энергии при фотосинтезе
-        self.food += func.normalize_value(func.euclidean_distance(self.screen_position,sun_coord), 0, cfg.width, 15,-10)
+        self.food += func.normalize_value(func.euclidean_distance(self.screen_position,sun_coord), 0, cfg.width, 100,-50)
         # Ограничиваем максимальное количество энергии
         self.food = min(self.food, self.MAX_ENERGY)
         self.move_ptr()  # Переход УТК
@@ -182,7 +181,6 @@ class Predator(BotGenome):
         if surface.world_grid[new_y][new_x] is None:
             move_cell(self, x, y, new_x, new_y)
             
-            
         # Если куда хочет шагнуть клетка есть еда
         elif isinstance(surface.world_grid[new_y][new_x], objs.Food):
             # Перемещаем клетку
@@ -210,8 +208,7 @@ class Predator(BotGenome):
     # Функция деления
     def reproduce(self):
         # Получаем список свободных позиций вокруг бота
-        free_positions = func.get_free_adjacent_positions(
-            self.position, surface.world_grid)
+        free_positions = func.get_free_adjacent_positions(self.position, surface.world_grid)
 
         if not free_positions:
             x, y = self.position
@@ -306,7 +303,6 @@ class Cell(BotGenome):
         new_color = (self.color[0], max(
             self.color[1] - 1, 90), self.color[2])  # Смещаем цвета
         
-        
         if self.count_of_reproduce == 10 and get_index_of_bias(self, step=2, len_of_number=2) == 1:
             new_bot = Predator(food=self.food // 2, x=x, y=y,
                                 color=(230, 1, 92), genome=new_genome)  # Создание нового бота
@@ -358,6 +354,7 @@ def move_cell(self, x, y, new_x ,new_y):
     """
     x, y = Передаем текущие координаты клетки
     new_x, new_y = Передаем новые координты
+    И перемещаем клетку
     """
     # Освобождаем текущую позицию
     surface.world_grid[y][x] = None
