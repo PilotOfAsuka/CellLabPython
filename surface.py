@@ -5,25 +5,17 @@ import objects as objs
 import gui
 
 # Инициализация двумерного массива мира
-world_grid = [[None for _ in range(cfg.GRID_SIZE_W)] for _ in range(cfg.GRID_SIZE_H)] # Мир в котором живут клетки
+world_grid = [[None for _ in range(cfg.GRID_SIZE_W)] for _ in range(cfg.GRID_SIZE_H)]  # Мир в котором живут клетки
 
-# Инициализация начальных клеток в мире
-for _ in range(cfg.START_NUM_OF_CELL):
-    x, y = func.random_position(world_grid)
-    bot = genome.Cell(x=x, y=y)
-    world_grid[y][x] = bot
-    
-# Класс Surface определяет мир или же поверхноть для отрисовки
+
+# Класс Surface определяет мир или же поверхность для отрисовки
 class Surface:
-    def __init__(self, surface):
-        self.world = surface
-        pass
-        
-    # Функция отрисовки обьектов на Surface
-    def draw_objs(self):
+    # Функция отрисовки объектов на Surface
+    @staticmethod
+    def draw_objs():
         gui.count_of_cell = 0
         gui.count_of_food = 0
-        gui.count_of_cicle += 1
+        gui.count_of_cycle += 1
         for y in range(cfg.GRID_SIZE_H):
             for x in range(cfg.GRID_SIZE_W):
                 obj = world_grid[y][x]
@@ -33,11 +25,24 @@ class Surface:
                 if isinstance(obj, objs.Food):
                     gui.count_of_food += 1
                     func.draw_obj(obj)
-                    
-    # Функция обновления обьектов в мире                
+
+    # Функция обновления объектов в мире
+    @staticmethod
     def update_surface():
         for y in range(cfg.GRID_SIZE_H):
             for x in range(cfg.GRID_SIZE_W):
-                obj = world_grid[y][x] 
-                if isinstance(obj, genome.BotGenome):      
+                obj = world_grid[y][x]
+                if isinstance(obj, genome.BotGenome):
                     obj.execute_genome()
+
+    @staticmethod
+    def init_cells():
+        # Инициализация начальных клеток в мире
+        for _ in range(cfg.START_NUM_OF_CELL):
+            free_x, free_y = func.random_position(world_grid)
+            bot = genome.Cell(x=free_x, y=free_y)
+            world_grid[free_y][free_x] = bot
+        pass
+
+
+Surface.init_cells()

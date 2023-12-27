@@ -8,7 +8,7 @@ clock = pygame.time.Clock()
 pygame.font.init()
 font = pygame.font.Font("font/REDENSEK.TTF", 35)  # Выберите подходящий шрифт и размер
 
-# Main.py :D  
+# Main.py :D
 if __name__ == "__main__":
     app = app.App()
     app.loop()
