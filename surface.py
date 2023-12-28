@@ -15,25 +15,29 @@ class Surface:
     def draw_objs():
         gui.count_of_cell = 0
         gui.count_of_food = 0
-        gui.count_of_cycle += 1
         for y in range(cfg.GRID_SIZE_H):
             for x in range(cfg.GRID_SIZE_W):
                 obj = world_grid[y][x]
                 if isinstance(obj, genome.BotGenome):
                     func.draw_obj(obj)
                     gui.count_of_cell += 1
-                if isinstance(obj, objs.Food):
+                elif isinstance(obj, objs.Food):
                     gui.count_of_food += 1
                     func.draw_obj(obj)
 
     # Функция обновления объектов в мире
     @staticmethod
     def update_surface():
+        gui.count_of_cycle += 1
         for y in range(cfg.GRID_SIZE_H):
             for x in range(cfg.GRID_SIZE_W):
                 obj = world_grid[y][x]
                 if isinstance(obj, genome.BotGenome):
                     obj.execute_genome()
+                elif isinstance(obj, objs.Food):
+                    obj.count_of_cycle += 1
+                    obj.check_death()
+                    obj.move()
 
     @staticmethod
     def init_cells():

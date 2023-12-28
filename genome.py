@@ -6,8 +6,8 @@ import surface
 
 food_values = {
     'cell_thinks': {'min': 50, 'max': 30},  # Зависит от температуры
-    'photosynthesis': {'min': 100, 'max': -100},  # Зависит от расстояния до солнца
-    'predator_thinks': {'min': 10, 'max': 5},  # Зависит от температуры
+    'photosynthesis': {'min': 100, 'max': -50},  # Зависит от расстояния до солнца
+    'predator_thinks': {'min':  10, 'max': 5},  # Зависит от температуры
     'predator_move': {'min': 10, 'max': 5},  # Зависит от температуры
     'cell_move': {'min': 10, 'max': 5},  # Зависит от температуры
 }
@@ -48,7 +48,8 @@ class BotGenome:
         if command in range(6, 20):
             self.photosynthesis()
         elif command in range(21, 25):
-            self.move()
+            #self.move()
+            pass
         elif command in range(0, 5):
             self.how_many_food()
         elif command in range(26, 30):
@@ -65,8 +66,8 @@ class BotGenome:
     # Функция фотосинтеза
     def photosynthesis(self):
         # Логика получения энергии при фотосинтезе
-        self.food += func.normalize_value(func.euclidean_distance(self.screen_position, sun_coord),
-                                          0, cfg.width, food_values['photosynthesis']['min'],
+        self.food += func.normalize_value(self.position[1],
+                                          0, cfg.GRID_SIZE_H, food_values['photosynthesis']['min'],
                                           food_values['photosynthesis']['max'])
         # Ограничиваем максимальное количество энергии
         self.food = min(self.food, self.MAX_ENERGY)
@@ -79,10 +80,10 @@ class BotGenome:
 
         if self.food >= food_genome:
             # Если условие перехода меньше количества собственной энергии
-            self.ptr = get_next_index(self, step=2)
+            self.ptr = self_get_next_index(self, step=2)
         else:
             # Если условие перехода больше количества собственной энергии
-            self.ptr = get_next_index(self, step=3)
+            self.ptr = self_get_next_index(self, step=3)
 
     # Функция перемещения УТК
     def move_ptr_to(self):
@@ -97,12 +98,12 @@ class BotGenome:
     # Опрос какая сейчас температура
     def is_this_temp(self):
         # Перемещаем указатель текущей команды
-        self.ptr = get_next_index(self, step=func.normalize_value(temp, -15, 15, 30, 0))
+        self.ptr = self_get_next_index(self, step=func.normalize_value(temp, -15, 15, 30, 0))
         
     # Команда посмотреть    
     def command_view(self):
         # Выбираем направление на основе смещения
-        move_dir = get_index_of_bias(self, step=1, len_of_number=len(cfg.move_directions))
+        move_dir = self_get_index_of_bias(self, step=1, len_of_number=len(cfg.move_directions))
         dx, dy = cfg.move_directions[move_dir]  # Получаем Направление
         
         # Получаем точку куда мы смотрим
@@ -113,31 +114,35 @@ class BotGenome:
         # Если на пути пусто
         if surface.world_grid[new_y][new_x] is None:
             # Перемещаем указатель текущей команды
-            self.ptr = get_next_index(self, step=2)
+            self.ptr = self_get_next_index(self, step=2)
         # Если на пути органика
         elif isinstance(surface.world_grid[new_y][new_x], objs.Food):
             # Перемещаем указатель текущей команды
-            self.ptr = get_next_index(self, step=43)
+            self.ptr = self_get_next_index(self, step=43)
         # Если на пути клетка
         elif isinstance(surface.world_grid[new_y][new_x], Cell):
             # Перемещаем указатель текущей команды
-            self.ptr = get_next_index(self, step=59)
+            self.ptr = self_get_next_index(self, step=59)
         # Если на пути хищник
         elif isinstance(surface.world_grid[new_y][new_x], Predator):
             # Перемещаем указатель текущей команды
-            self.ptr = get_next_index(self, step=24)
+            self.ptr = self_get_next_index(self, step=24)
             
     # Функция опроса расстояния до солнца и смещения  
     def how_much_distance_to_sun(self):
-        sun_dist = func.normalize_value(func.euclidean_distance(self.screen_position, sun_coord),
-                                        0, cfg.world_size, 0, 64)
+        sun_dist = func.normalize_value(self.position[1], 0, cfg.GRID_SIZE_H,
+                                        1, 63)
         # Перемещаем указатель текущей команды
-        self.ptr = get_next_index(self, step=sun_dist)
+        self.ptr = self_get_next_index(self, step=sun_dist)
 
     def check_death(self):
         if self.food <= 0:  # Условие смерти клетки при отрицательной энергии
             x, y = self.position
             surface.world_grid[y][x] = None  # Удаление бота из сетки
+            if random.random() < 0.1:
+                # С шансом 10 процентов после смерти бота появляется органика (Если нет места для размножения)
+                surface.world_grid[y][x] = objs.Food(x=x, y=y, food=300,
+                                                     genome_number=self_get_index_of_bias(self, 1, 64))
 
 
 class Predator(BotGenome):
@@ -181,15 +186,16 @@ class Predator(BotGenome):
         self.food -= func.normalize_value(temp, -15, 15, food_values['predator_move']['min'],
                                           food_values['predator_move']['max'])
         self.check_death()
+
         # Выбираем направление на основе смещения
-        move_dir = get_index_of_bias(self, step=1, len_of_number=len(cfg.move_directions))
+        move_dir = self_get_index_of_bias(self, step=1, len_of_number=len(cfg.move_directions))
         # Получаем Направление
         dx, dy = cfg.move_directions[move_dir]  
 
         # Получаем текущие и новые координаты
         x, y = self.position
         new_x = (x + dx) % cfg.GRID_SIZE_W
-        new_y = (y + dy) % cfg.GRID_SIZE_H
+        new_y = y + dy if -1 < y + dy < cfg.GRID_SIZE_H else y
 
         # Проверка, свободна ли новая позиция
         if surface.world_grid[new_y][new_x] is None:
@@ -198,26 +204,32 @@ class Predator(BotGenome):
         # Если куда хочет шагнуть клетка есть еда
         elif isinstance(surface.world_grid[new_y][new_x], objs.Food):
             # Перемещаем клетку
+            food = surface.world_grid[new_y][new_x]
+
             move_cell(self, x, y, new_x, new_y)
-            
-            self.food += 1  # Логика расхода энергии
+            func.mutate_genome_new(self.genome, 0.1, food.genome_number)
+            self.food += food.food  # Логика расхода энергии
             
             # Перемещаем УТК
-            self.ptr = get_next_index(self, step=43)
+            self.ptr = self_get_next_index(self, step=43)
 
         # Если куда хочет шагнуть клетка есть клетка
         elif isinstance(surface.world_grid[new_y][new_x], Cell):
-            # Перемещаем клетку
-            move_cell(self, x, y, new_x, new_y)
-            
-            self.food += 70  # Логика расхода энергии
-            
-            # Перемещаем УТК
-            self.ptr = get_next_index(self, step=24)
-            
+            if get_index_of_bias(surface.world_grid[new_y][new_x], 2, 10) in range(1, 5):
+                # Перемещаем клетку
+                move_cell(self, x, y, new_x, new_y)
+
+                self.food += 50  # Логика расхода энергии
+
+                # Перемещаем УТК
+                self.ptr = self_get_next_index(self, step=24)
+            else:
+                # Перемещаем УТК
+                self.ptr = self_get_next_index(self, step=42)
+
         # Если куда хочет шагнуть клетка есть хищник   
         elif isinstance(surface.world_grid[new_x][new_y], Predator):
-            self.ptr = get_next_index(self, step=59)
+            self.ptr = self_get_next_index(self, step=59)
 
     # Функция деления
     def reproduce(self):
@@ -228,9 +240,6 @@ class Predator(BotGenome):
             x, y = self.position
             # Удаление бота из сетки если Нет свободных позиций для размножения
             surface.world_grid[y][x] = None
-            if random.random() < 0.1:
-                # С шансом 10 процентов после смерти бота появляется органика (Если нет места для размножения)
-                surface.world_grid[y][x] = objs.Food(self, x=x, y=y, food=100)
             return
 
         # Выбираем случайную свободную позицию для нового бота
@@ -260,13 +269,13 @@ class Cell(BotGenome):
                                           food_values['cell_move']['max'])
         self.check_death()
         # Выбираем направление на основе смещения
-        move_dir = get_index_of_bias(self, step=1, len_of_number=len(cfg.move_directions))
+        move_dir = self_get_index_of_bias(self, step=1, len_of_number=len(cfg.move_directions))
         dx, dy = cfg.move_directions[move_dir]  # Получаем Направление
 
         # Получение текущей и новой позиции
         x, y = self.position
         new_x = (x + dx) % cfg.GRID_SIZE_W
-        new_y = (y + dy) % cfg.GRID_SIZE_H
+        new_y = y + dy if -1 < y + dy < cfg.GRID_SIZE_H else y
 
         # Проверка, свободна ли новая позиция
         if surface.world_grid[new_y][new_x] is None:
@@ -276,21 +285,21 @@ class Cell(BotGenome):
         # Если куда хочет шагнуть клетка есть еда
         elif isinstance(surface.world_grid[new_y][new_x], objs.Food):
             # Перемещаем клетку
-            move_cell(self, x, y, new_x, new_y)
+            #move_cell(self, x, y, new_x, new_y)
             
-            self.food += 1  # Логика расхода энергии
+            #self.food += 1  # Логика расхода энергии
             # Перемещаем указатель текущей команды
-            self.ptr = get_next_index(self, step=43)
+            self.ptr = self_get_next_index(self, step=43)
 
         # Если куда хочет шагнуть клетка есть такая же клетка
         elif isinstance(surface.world_grid[new_y][new_x], Cell):
             # Перемещаем указатель текущей команды
-            self.ptr = get_next_index(self, step=59)
+            self.ptr = self_get_next_index(self, step=59)
             
         # Если куда хочет шагнуть клетка есть хищник
         elif isinstance(surface.world_grid[new_y][new_x], Predator):
             # Перемещаем указатель текущей команды
-            self.ptr = get_next_index(self, step=24)
+            self.ptr = self_get_next_index(self, step=24)
             
     # Функция деления
     def reproduce(self):
@@ -302,9 +311,7 @@ class Cell(BotGenome):
             x, y = self.position
             # Удаление бота из сетки если Нет свободных позиций для размножения
             surface.world_grid[y][x] = None
-            if random.random() < 0.1:
-                # С шансом 10 процентов после смерти бота появляется органика (Если нет места для размножения)
-                surface.world_grid[y][x] = objs.Food(self, x=x, y=y, food=100)
+
             return
 
         # Выбираем случайную свободную позицию для нового бота
@@ -317,9 +324,9 @@ class Cell(BotGenome):
         func.mutate_genome(new_genome)
 
         # Создаем нового бота с мутированным геномом
-        new_color = (self.color[0], max(self.color[1] - 1, 90), self.color[2])  # Смещаем цвета
+        new_color = (self.color[0], max(min(self.genome[0] % 255, 255), 100), self.color[2])  # Смещаем цвета
         
-        if self.count_of_reproduce == 10 and get_index_of_bias(self, step=2, len_of_number=2) == 1:
+        if self.count_of_reproduce == 10 and self_get_index_of_bias(self, step=2, len_of_number=2) == 1:
             new_bot = Predator(food=self.food // 2, x=x, y=y,
                                color=(230, 1, 92), genome=new_genome)  # Создание нового бота
             surface.world_grid[y][x] = new_bot  # Помещаем нового бота в мир
@@ -331,9 +338,11 @@ class Cell(BotGenome):
             self.food //= 4  # Разделяем энергию между родительской и дочерней клетки 
             
         self.count_of_reproduce += 1
-        
-        
-def get_index_of_bias(self, step, len_of_number):
+
+
+
+
+def self_get_index_of_bias(self, step, len_of_number):
     """
     Функция получения смещения.
     Используется для получения условия на основе числа смещения
@@ -352,7 +361,7 @@ def get_index_of_bias(self, step, len_of_number):
     return index_of_bias
 
 
-def get_next_index(self, step):
+def self_get_next_index(self, step):
     """
     Функция получения следующего индекса смешения
     используется для увеличения УТК на число полученное в смешении
@@ -381,3 +390,23 @@ def move_cell(self, x, y, new_x, new_y):
     # Перемещаем бота на новую позицию
     surface.world_grid[new_y][new_x] = self
     self.position = new_x, new_y
+
+
+def get_index_of_bias(bot, step, len_of_number):
+    """
+    Функция получения смещения.
+    Используется для получения условия на основе числа смещения
+    [...33,43,24,...]
+    [... 5, 6, 7,...]
+    Пример bot.ptr = 5
+           step = 1
+           index = 6
+    Так как мы к self.ptr прибавили step и получили индекс смешение по гену
+    len_of_number число ограничитель (К примеру если len_of_number является len(cfg.move_directions)
+    то мы получим значение ограниченное количеством направлений от числа в гене
+    43 % 8 - кол-во направлений = 3 - Вправо и низ)
+    """
+    index = (bot.ptr + step) % len(bot.genome)  # Индекс смещения
+    index_of_bias = bot.genome[index] % len_of_number
+    return index_of_bias
+

@@ -31,10 +31,22 @@ def get_free_adjacent_positions(position, world_grid):
 
 # Функция мутации
 def mutate_genome(genome):
-    mutation_chance = 0.05  # Шанс мутации для каждого гена
+    mutation_chance = 0.1  # Шанс мутации для каждого гена
     for i in range(len(genome)):
         if random.random() < mutation_chance:
             genome[i] = random.randint(0, 63)  # Новое случайное значение гена
+
+
+# Функция мутации
+def mutate_genome_new(genome, mutation_chance, new_genome):
+    """
+    genome = Принимает на вход геном
+    Mutation_chance = шанс мутации
+    new_genome = новое значение
+    """
+    for i in range(len(genome)):
+        if random.random() < mutation_chance:
+            genome[i] = new_genome  # Новое значение гена
 
 
 # Функция отрисовки объектов
@@ -61,7 +73,7 @@ def weather_simulation(cycle):
     temp = min_temp + (t_sin + 1) * (max_temp - min_temp) / 2
 
     # Положение солнца зависит от цикла, оно движется от левого верхнего до правого нижнего угла
-    change_every = 100  # изменять каждые _ циклов
+    change_every = 10  # изменять каждые _ циклов
     sun_x = (cycle // change_every) % (cfg.width-cfg.gui_offset)
     sun_y = (cycle // change_every) % cfg.height
     return int(temp), (sun_x, sun_y)

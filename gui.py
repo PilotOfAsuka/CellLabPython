@@ -35,14 +35,36 @@ class Slider:
         pygame.draw.rect(screen, c.FOOD_COLOR, (self.rect.x + slider_pos, self.rect.y, 20, self.rect.height))
 
 
+class Button:
+    def __init__(self, x, y, w, h):
+        self.rect = pygame.Rect(x, y, w, h)
+        self.click = False
+        self.stop_color = (0, 155, 0)
+        self.start_color = (155, 0, 0)
+
+    def handle_event(self, event):
+        if event.type == pygame.MOUSEBUTTONDOWN and self.rect.collidepoint(event.pos):
+            if self.click is True:
+                self.click = False
+            else:
+                self.click = True
+
+    def draw(self, screen):
+        if self.click is True:
+            pygame.draw.rect(screen, self.start_color, self.rect)
+        else:
+            pygame.draw.rect(screen, self.stop_color, self.rect)
+
+
 gui_offset_x, gui_offset_y = 10, 0  # Отступы от края ГУИ
 line_text_offset = 30  # Высота строки
 count_of_cell = 0  # Счетчик кол-во клеток
 count_of_food = 0  # Счетчик кол-во органики
 count_of_cycle = 0  # Счетчик кол-во циклов
 
-speed_slider = Slider(cfg.width - cfg.gui_offset + gui_offset_x, gui_offset_y + 15 + line_text_offset *
-                      4, 190 - gui_offset_x, 10, 1, 60)
+
+start_stop_button = Button(cfg.width - cfg.gui_offset + gui_offset_x, gui_offset_y + 5 + line_text_offset *
+                      4, 180, 25)
 
 
 def draw_text(text, var, x, y):
@@ -70,7 +92,7 @@ def draw_gui():
     draw_text("Cycle:", count_of_cycle, cfg.width - cfg.gui_offset + gui_offset_x, gui_offset_y + line_text_offset * 2)
     # Отрисовка текста "Скорость"
     draw_text("Speed", "", cfg.width - cfg.gui_offset + gui_offset_x, gui_offset_y + line_text_offset * 3)
-    speed_slider.draw(cfg.screen)
     draw_text("Temp.:", genome.temp, cfg.width - cfg.gui_offset + gui_offset_x, gui_offset_y + line_text_offset * 5)
     draw_border()
-    draw_sun_cord()
+    start_stop_button.draw(cfg.screen)
+    #draw_sun_cord()
