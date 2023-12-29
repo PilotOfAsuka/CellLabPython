@@ -26,6 +26,7 @@ class BotGenome:
         self.color = color
         self.count_of_reproduce = 0
         self.screen_position = x * cfg.CELL_SIZE, y * cfg.CELL_SIZE
+        self.iterated = False
         
     MAX_ENERGY = 1100  # Максимальный уровень энергии для бота
 
@@ -48,7 +49,7 @@ class BotGenome:
         if command in range(6, 20):
             self.photosynthesis()
         elif command in range(21, 25):
-            #self.move()
+            # Убрал возможность ходить (трава не ходит :) )
             pass
         elif command in range(0, 5):
             self.how_many_food()
@@ -131,7 +132,7 @@ class BotGenome:
     # Функция опроса расстояния до солнца и смещения  
     def how_much_distance_to_sun(self):
         sun_dist = func.normalize_value(self.position[1], 0, cfg.GRID_SIZE_H,
-                                        1, 63)
+                                        0, 5)
         # Перемещаем указатель текущей команды
         self.ptr = self_get_next_index(self, step=sun_dist)
 
@@ -142,7 +143,10 @@ class BotGenome:
             if random.random() < 0.1:
                 # С шансом 10 процентов после смерти бота появляется органика (Если нет места для размножения)
                 surface.world_grid[y][x] = objs.Food(x=x, y=y, food=300,
-                                                     genome_number=self_get_index_of_bias(self, 1, 64))
+                                                     genome_number=self_get_index_of_bias(self, 1, 64),
+                                                     color=get_colors_bias(self, 67, 117, 54,
+                                                                           104, 34, 84)
+                                                     )
 
 
 class Predator(BotGenome):
@@ -207,7 +211,7 @@ class Predator(BotGenome):
             food = surface.world_grid[new_y][new_x]
 
             move_cell(self, x, y, new_x, new_y)
-            func.mutate_genome_new(self.genome, 0.1, food.genome_number)
+            #ßfunc.mutate_genome_new(self.genome, 0.1, food.genome_number)
             self.food += food.food  # Логика расхода энергии
             
             # Перемещаем УТК
@@ -261,45 +265,6 @@ class Predator(BotGenome):
 class Cell(BotGenome):
     def __init__(self, food=500, x=0, y=0, color=(0, 255, 0), genome=None):
         super().__init__(food, x, y, color, genome)
-        
-    # функция движения клетки и проверки на столкновение
-    def move(self):
-        # Логика расхода энергии
-        self.food -= func.normalize_value(temp, -15, 15, food_values['cell_move']['min'],
-                                          food_values['cell_move']['max'])
-        self.check_death()
-        # Выбираем направление на основе смещения
-        move_dir = self_get_index_of_bias(self, step=1, len_of_number=len(cfg.move_directions))
-        dx, dy = cfg.move_directions[move_dir]  # Получаем Направление
-
-        # Получение текущей и новой позиции
-        x, y = self.position
-        new_x = (x + dx) % cfg.GRID_SIZE_W
-        new_y = y + dy if -1 < y + dy < cfg.GRID_SIZE_H else y
-
-        # Проверка, свободна ли новая позиция
-        if surface.world_grid[new_y][new_x] is None:
-            # Перемещаем клетку
-            move_cell(self, x, y, new_x, new_y)
-
-        # Если куда хочет шагнуть клетка есть еда
-        elif isinstance(surface.world_grid[new_y][new_x], objs.Food):
-            # Перемещаем клетку
-            #move_cell(self, x, y, new_x, new_y)
-            
-            #self.food += 1  # Логика расхода энергии
-            # Перемещаем указатель текущей команды
-            self.ptr = self_get_next_index(self, step=43)
-
-        # Если куда хочет шагнуть клетка есть такая же клетка
-        elif isinstance(surface.world_grid[new_y][new_x], Cell):
-            # Перемещаем указатель текущей команды
-            self.ptr = self_get_next_index(self, step=59)
-            
-        # Если куда хочет шагнуть клетка есть хищник
-        elif isinstance(surface.world_grid[new_y][new_x], Predator):
-            # Перемещаем указатель текущей команды
-            self.ptr = self_get_next_index(self, step=24)
             
     # Функция деления
     def reproduce(self):
@@ -324,8 +289,10 @@ class Cell(BotGenome):
         func.mutate_genome(new_genome)
 
         # Создаем нового бота с мутированным геномом
-        new_color = (self.color[0], max(min(self.genome[0] % 255, 255), 100), self.color[2])  # Смещаем цвета
-        
+        new_color = get_colors_bias(self,100, 148,
+                                    200, 255,
+                                    150, 204)  # Смещаем цвета
+
         if self.count_of_reproduce == 10 and self_get_index_of_bias(self, step=2, len_of_number=2) == 1:
             new_bot = Predator(food=self.food // 2, x=x, y=y,
                                color=(230, 1, 92), genome=new_genome)  # Создание нового бота
@@ -338,8 +305,6 @@ class Cell(BotGenome):
             self.food //= 4  # Разделяем энергию между родительской и дочерней клетки 
             
         self.count_of_reproduce += 1
-
-
 
 
 def self_get_index_of_bias(self, step, len_of_number):
@@ -410,3 +375,10 @@ def get_index_of_bias(bot, step, len_of_number):
     index_of_bias = bot.genome[index] % len_of_number
     return index_of_bias
 
+
+def get_colors_bias(self, first_min, first_max, second_min, second_max, third_min, third_max):
+    colors = (max(min(self.genome[0] % 255, first_max), first_min),
+              max(min(self.genome[0] % 255, second_max), second_min),
+              max(min(self.genome[0] % 255, third_max), third_min))
+
+    return colors

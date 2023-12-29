@@ -3,6 +3,7 @@ import genome
 import func
 import objects as objs
 import gui
+from itertools import product
 
 # Инициализация двумерного массива мира
 world_grid = [[None for _ in range(cfg.GRID_SIZE_W)] for _ in range(cfg.GRID_SIZE_H)]  # Мир в котором живут клетки
@@ -32,12 +33,15 @@ class Surface:
         for y in range(cfg.GRID_SIZE_H):
             for x in range(cfg.GRID_SIZE_W):
                 obj = world_grid[y][x]
-                if isinstance(obj, genome.BotGenome):
-                    obj.execute_genome()
-                elif isinstance(obj, objs.Food):
-                    obj.count_of_cycle += 1
-                    obj.check_death()
-                    obj.move()
+                if obj and not obj.iterated:  # Проверяем, не прошел ли объект уже итерацию
+                    if isinstance(obj, genome.BotGenome):
+                        obj.execute_genome()
+                    elif isinstance(obj, objs.Food):
+                        obj.count_of_cycle += 1
+                        obj.check_death()
+                        if gui.count_of_cycle % 500 == 0:
+                            obj.move()
+                    obj.iterated = True  # Устанавливаем флаг, что объект уже прошел итерацию
 
     @staticmethod
     def init_cells():
@@ -48,5 +52,15 @@ class Surface:
             world_grid[free_y][free_x] = bot
         pass
 
+    @staticmethod
+    def check_iterated():
+        for y in range(cfg.GRID_SIZE_H):
+            for x in range(cfg.GRID_SIZE_W):
+                obj = world_grid[y][x]
+                if obj:
+                    obj.iterated = False
 
 Surface.init_cells()
+
+
+

@@ -72,12 +72,6 @@ def draw_text(text, var, x, y):
     cfg.screen.blit(count_text, (x, y))
 
 
-def draw_sun_cord():
-    pygame.draw.line(cfg.screen, c.BLACK, (genome.sun_coord[0], 0), (genome.sun_coord[0], cfg.height), width=1)
-    pygame.draw.line(cfg.screen, c.BLACK, (0, genome.sun_coord[0]),
-                     (cfg.width-cfg.gui_offset, genome.sun_coord[0]), width=1)
-
-
 def draw_border():
     rect = pygame.Rect(0, 0, cfg.width - cfg.gui_offset, cfg.height)
     pygame.draw.rect(cfg.screen, c.BLACK, rect, width=2)
@@ -95,4 +89,3 @@ def draw_gui():
     draw_text("Temp.:", genome.temp, cfg.width - cfg.gui_offset + gui_offset_x, gui_offset_y + line_text_offset * 5)
     draw_border()
     start_stop_button.draw(cfg.screen)
-    #draw_sun_cord()

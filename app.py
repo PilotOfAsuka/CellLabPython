@@ -34,7 +34,8 @@ class App:
     def loop(self):
         while self.run:
             self.event()
-            if gui.start_stop_button.click is True:
+            if gui.start_stop_button.click is False:
+                self.surface.check_iterated()
                 genome.temp, genome.sun_coord = func.weather_simulation(gui.count_of_cycle)
                 self.surface.update_surface()
             self.draw()
