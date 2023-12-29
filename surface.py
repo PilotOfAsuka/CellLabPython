@@ -1,9 +1,8 @@
-import configs as cfg
 import genome
 import func
 import objects as objs
 import gui
-from itertools import product
+import configs as cfg
 
 # Инициализация двумерного массива мира
 world_grid = [[None for _ in range(cfg.GRID_SIZE_W)] for _ in range(cfg.GRID_SIZE_H)]  # Мир в котором живут клетки
@@ -11,36 +10,30 @@ world_grid = [[None for _ in range(cfg.GRID_SIZE_W)] for _ in range(cfg.GRID_SIZ
 
 # Класс Surface определяет мир или же поверхность для отрисовки
 class Surface:
-    # Функция отрисовки объектов на Surface
+
+    # Функция обновления объектов в мире
     @staticmethod
-    def draw_objs():
+    def update_surface():
+        if gui.start_stop_button.click is True:
+            gui.count_of_cycle += 1
         gui.count_of_cell = 0
         gui.count_of_food = 0
         for y in range(cfg.GRID_SIZE_H):
             for x in range(cfg.GRID_SIZE_W):
                 obj = world_grid[y][x]
-                if isinstance(obj, genome.BotGenome):
-                    func.draw_obj(obj)
-                    gui.count_of_cell += 1
-                elif isinstance(obj, objs.Food):
-                    gui.count_of_food += 1
-                    func.draw_obj(obj)
-
-    # Функция обновления объектов в мире
-    @staticmethod
-    def update_surface():
-        gui.count_of_cycle += 1
-        for y in range(cfg.GRID_SIZE_H):
-            for x in range(cfg.GRID_SIZE_W):
-                obj = world_grid[y][x]
                 if obj and not obj.iterated:  # Проверяем, не прошел ли объект уже итерацию
                     if isinstance(obj, genome.BotGenome):
-                        obj.execute_genome()
+                        if gui.start_stop_button.click is True:
+                            obj.execute_genome()
+                        func.draw_obj(obj)
+                        gui.count_of_cell += 1
                     elif isinstance(obj, objs.Food):
-                        obj.count_of_cycle += 1
-                        obj.check_death()
-                        if gui.count_of_cycle % 500 == 0:
+                        if gui.start_stop_button.click is True:
+                            obj.count_of_cycle += 1
+                            obj.check_death()
                             obj.move()
+                        gui.count_of_food += 1
+                        func.draw_obj(obj)
                     obj.iterated = True  # Устанавливаем флаг, что объект уже прошел итерацию
 
     @staticmethod
@@ -60,7 +53,5 @@ class Surface:
                 if obj:
                     obj.iterated = False
 
+
 Surface.init_cells()
-
-
-

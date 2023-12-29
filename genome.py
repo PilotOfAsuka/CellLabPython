@@ -7,9 +7,8 @@ import surface
 food_values = {
     'cell_thinks': {'min': 50, 'max': 30},  # Зависит от температуры
     'photosynthesis': {'min': 100, 'max': -50},  # Зависит от расстояния до солнца
-    'predator_thinks': {'min':  10, 'max': 5},  # Зависит от температуры
+    'predator_thinks': {'min':  50, 'max': 5},  # Зависит от температуры
     'predator_move': {'min': 10, 'max': 5},  # Зависит от температуры
-    'cell_move': {'min': 10, 'max': 5},  # Зависит от температуры
 }
 
 temp, sun_coord = 0, (0, 0)
@@ -17,7 +16,7 @@ temp, sun_coord = 0, (0, 0)
 
 
 class BotGenome:
-    def __init__(self, food=500, x=0, y=0, color=(148, 255, 204), genome=None):
+    def __init__(self, food=500, x=0, y=0, color=(50, 255, 50), genome=None):
         # Инициализация генома с заданным размером
         self.genome = [random.randint(0, 63) for _ in range(cfg.gen_size)] if genome is None else genome
         self.ptr = 0  # УТК (указатель текущей команды)
@@ -211,7 +210,7 @@ class Predator(BotGenome):
             food = surface.world_grid[new_y][new_x]
 
             move_cell(self, x, y, new_x, new_y)
-            #ßfunc.mutate_genome_new(self.genome, 0.1, food.genome_number)
+            #func.mutate_genome_new(self.genome, 0.1, food.genome_number)
             self.food += food.food  # Логика расхода энергии
             
             # Перемещаем УТК
@@ -276,22 +275,26 @@ class Cell(BotGenome):
             x, y = self.position
             # Удаление бота из сетки если Нет свободных позиций для размножения
             surface.world_grid[y][x] = None
-
+            if random.random() < 0.1:
+                # С шансом 10 процентов после смерти бота появляется органика (Если нет места для размножения)
+                surface.world_grid[y][x] = objs.Food(x=x, y=y, food=300,
+                                                     genome_number=self_get_index_of_bias(self, 1, 64),
+                                                     color=get_colors_bias(self, 67, 117, 54,
+                                                                           104, 34, 84)
+                                                     )
             return
 
         # Выбираем случайную свободную позицию для нового бота
-        x, y = random.choice(free_positions)
-
+        index_free_pos = self_get_index_of_bias(self, 1, len(free_positions))
+        x, y = free_positions[index_free_pos]
         # Копируем геном родителя
         new_genome = self.genome.copy()
 
         # Проводим мутацию в геноме
-        func.mutate_genome(new_genome)
+        func.mutate_genome_new(new_genome, 0.10, random.randint(0, 63))
 
         # Создаем нового бота с мутированным геномом
-        new_color = get_colors_bias(self,100, 148,
-                                    200, 255,
-                                    150, 204)  # Смещаем цвета
+        new_color = (50, 192 + self.genome[0], 50)  # Смещаем цвета
 
         if self.count_of_reproduce == 10 and self_get_index_of_bias(self, step=2, len_of_number=2) == 1:
             new_bot = Predator(food=self.food // 2, x=x, y=y,

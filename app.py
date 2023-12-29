@@ -24,22 +24,22 @@ class App:
             if event.type == pygame.QUIT:
                 self.run = False
             gui.start_stop_button.handle_event(event)
+            gui.camera.handle_event(event)
 
-    # Активация и отрисовка графической части окна            
+    # Активация и отрисовка графической части окна
     def draw(self):
-        self.screen.fill(colors.BKG_COLOR)  
-        self.surface.draw_objs()
-        
-    # Основной цикл       
+        self.screen.fill(colors.BKG_COLOR)
+
+    # Основной цикл
     def loop(self):
         while self.run:
             self.event()
-            if gui.start_stop_button.click is False:
-                self.surface.check_iterated()
-                genome.temp, genome.sun_coord = func.weather_simulation(gui.count_of_cycle)
-                self.surface.update_surface()
+            self.gui.camera.update()
             self.draw()
+            self.surface.check_iterated()
+            genome.temp, genome.sun_coord = func.weather_simulation(gui.count_of_cycle)
+            self.surface.update_surface()
             self.gui.draw_gui()
-            pygame.display.flip() 
+            pygame.display.flip()
             main.clock.tick(60)  # FPS пока так топорно меняем скорость циклов
     

@@ -3,6 +3,7 @@ import configs as cfg
 import pygame
 import numpy as np
 import math
+import gui
 
 
 # Здесь можно хранить одиночные функции
@@ -44,15 +45,17 @@ def mutate_genome_new(genome, mutation_chance, new_genome):
     Mutation_chance = шанс мутации
     new_genome = новое значение
     """
-    for i in range(len(genome)):
-        if random.random() < mutation_chance:
-            genome[i] = new_genome  # Новое значение гена
+    i = random.randint(0, 63)
+    if random.random() < mutation_chance:
+        genome[i] = new_genome  # Новое значение гена
 
 
 # Функция отрисовки объектов
 def draw_obj(obj):
     x, y = obj.position
-    rect = pygame.Rect(x * cfg.CELL_SIZE, y * cfg.CELL_SIZE, cfg.CELL_SIZE, cfg.CELL_SIZE)
+    rect = pygame.Rect((x + gui.camera.x_offset) * (cfg.CELL_SIZE * gui.camera.scale),
+                       (y + gui.camera.y_offset) * (cfg.CELL_SIZE * gui.camera.scale),
+                       cfg.CELL_SIZE * gui.camera.scale, cfg.CELL_SIZE * gui.camera.scale)
     pygame.draw.rect(cfg.screen, obj.color, rect)
     
 

@@ -38,9 +38,13 @@ class Slider:
 class Button:
     def __init__(self, x, y, w, h):
         self.rect = pygame.Rect(x, y, w, h)
-        self.click = False
+        self.click = True
         self.stop_color = (0, 155, 0)
         self.start_color = (155, 0, 0)
+        self.clicked_text = 'Stop'
+        self.non_clicked_text = 'Play'
+        self.x = x
+        self.y = y
 
     def handle_event(self, event):
         if event.type == pygame.MOUSEBUTTONDOWN and self.rect.collidepoint(event.pos):
@@ -52,8 +56,12 @@ class Button:
     def draw(self, screen):
         if self.click is True:
             pygame.draw.rect(screen, self.start_color, self.rect)
+            count_text = main.font.render(self.clicked_text, True, c.WHITE)
+            cfg.screen.blit(count_text, (self.x, self.y - 5))
         else:
             pygame.draw.rect(screen, self.stop_color, self.rect)
+            count_text = main.font.render(self.non_clicked_text, True, c.WHITE)
+            cfg.screen.blit(count_text, (self.x, self.y - 6))
 
 
 gui_offset_x, gui_offset_y = 10, 0  # Отступы от края ГУИ
@@ -62,14 +70,19 @@ count_of_cell = 0  # Счетчик кол-во клеток
 count_of_food = 0  # Счетчик кол-во органики
 count_of_cycle = 0  # Счетчик кол-во циклов
 
+camera = cfg.Camera(cfg.width-200, cfg.height)
 
-start_stop_button = Button(cfg.width - cfg.gui_offset + gui_offset_x, gui_offset_y + 5 + line_text_offset *
-                      4, 180, 25)
+start_stop_button = Button(cfg.width - cfg.gui_offset + gui_offset_x, gui_offset_y + 7 + line_text_offset *
+                      3, 80, 25)
 
 
 def draw_text(text, var, x, y):
     count_text = main.font.render(text + " " + str(var), True, c.WHITE)
     cfg.screen.blit(count_text, (x, y))
+
+def draw_gui_rect(screen):
+    rect = pygame.Rect(cfg.width - 200, 0, 200, cfg.height)
+    pygame.draw.rect(screen, (117, 104, 84), rect)
 
 
 def draw_border():
@@ -78,6 +91,7 @@ def draw_border():
 
 
 def draw_gui():
+    draw_gui_rect(cfg.screen)
     # Отрисовка текста кол-ва клеток
     draw_text("Cells:", count_of_cell, cfg.width - cfg.gui_offset + gui_offset_x, gui_offset_y)
     # Отрисовка текста кол-ва органики
@@ -85,7 +99,6 @@ def draw_gui():
     # Отрисовка текста кол-ва циклов
     draw_text("Cycle:", count_of_cycle, cfg.width - cfg.gui_offset + gui_offset_x, gui_offset_y + line_text_offset * 2)
     # Отрисовка текста "Скорость"
-    draw_text("Speed", "", cfg.width - cfg.gui_offset + gui_offset_x, gui_offset_y + line_text_offset * 3)
-    draw_text("Temp.:", genome.temp, cfg.width - cfg.gui_offset + gui_offset_x, gui_offset_y + line_text_offset * 5)
+    draw_text("Temp.:", genome.temp, cfg.width - cfg.gui_offset + gui_offset_x, gui_offset_y + line_text_offset * 4)
     draw_border()
     start_stop_button.draw(cfg.screen)
