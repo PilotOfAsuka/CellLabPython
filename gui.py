@@ -70,7 +70,7 @@ count_of_cell = 0  # Счетчик кол-во клеток
 count_of_food = 0  # Счетчик кол-во органики
 count_of_cycle = 0  # Счетчик кол-во циклов
 
-camera = cfg.Camera(cfg.width-200, cfg.height)
+camera = cfg.Camera()
 
 start_stop_button = Button(cfg.width - cfg.gui_offset + gui_offset_x, gui_offset_y + 7 + line_text_offset *
                       3, 80, 25)

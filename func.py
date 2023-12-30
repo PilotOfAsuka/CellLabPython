@@ -55,7 +55,7 @@ def draw_obj(obj):
     x, y = obj.position
     rect = pygame.Rect((x + gui.camera.x_offset) * (cfg.CELL_SIZE * gui.camera.scale),
                        (y + gui.camera.y_offset) * (cfg.CELL_SIZE * gui.camera.scale),
-                       cfg.CELL_SIZE * gui.camera.scale, cfg.CELL_SIZE * gui.camera.scale)
+                       (cfg.CELL_SIZE * gui.camera.scale), (cfg.CELL_SIZE * gui.camera.scale))
     pygame.draw.rect(cfg.screen, obj.color, rect)
     
 

@@ -30,27 +30,37 @@ move_directions = (
 
 
 class Camera:
-    def __init__(self, wd, hd):
+    def __init__(self):
         self.cam = pygame.Rect(0, 0, width-200, height)
         self.scale = 1
-        self.wd = wd
-        self.hd = hd
+
         self.x_offset = 0
         self.y_offset = 0
+        self.min_offset = 0
+
+        self.moving_left = False
+        self.moving_right = False
+        self.moving_up = False
+        self.moving_down = False
 
     def update(self):
         # Обновление камеры
-        self.cam.width = int((width-200) * self.scale)
-        self.cam.height = int(height * self.scale)
+        if self.scale == 1:
+            self.y_offset = 0
+            self.x_offset = 0
 
-        # Ограничение масштаба
-        if self.cam.width < self.wd - 200:
-            self.cam.width = self.wd - 200
-        if self.cam.height < self.hd:
-            self.cam.height = self.hd
+        if self.scale == 2:
+            self.min_offset = -101
+        elif self.scale == 3:
+            self.min_offset = -134
+
+        if self.scale == 2 and self.y_offset < -100:
+            self.y_offset = -100
+
+        if self.scale == 2 and self.x_offset < -100:
+            self.x_offset = -100
 
     def handle_event(self, event):
-        event = event
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_PLUS or event.key == pygame.K_EQUALS:
                 self.scale = self.scale + 1 if -1 < self.scale + 1 < 4 else self.scale
@@ -59,15 +69,31 @@ class Camera:
                 self.scale = self.scale - 1 if 0 < self.scale - 1 < 4 else self.scale
                 print(self.scale)
 
+            #TODO перенести обработку смещения в Update_position()
             elif event.key == pygame.K_LEFT:
-                self.x_offset = self.x_offset + CELL_SIZE if 0 < self.x_offset < (GRID_SIZE_W//self.scale) else self.x_offset
+                self.x_offset = self.x_offset + 1 if self.min_offset < self.x_offset + 1 < 1 else self.x_offset
+                print(self.x_offset)
                 pass
             elif event.key == pygame.K_UP:
-                self.y_offset = self.y_offset + CELL_SIZE if 0 < self.y_offset < (GRID_SIZE_H//self.scale) else self.y_offset
+                self.y_offset = self.y_offset + 1 if self.min_offset < self.y_offset + 1 < 1 else self.y_offset
+                print(self.y_offset)
                 pass
             elif event.key == pygame.K_RIGHT:
-                self.x_offset = self.x_offset - CELL_SIZE if 0 < self.x_offset < (GRID_SIZE_W//self.scale) else self.x_offset
+                self.x_offset = self.x_offset - 1 if self.min_offset < self.x_offset - 1 < 1 else self.x_offset
+                print(self.x_offset)
                 pass
             elif event.key == pygame.K_DOWN:
-                self.y_offset = self.y_offset - CELL_SIZE if 0 < self.x_offset < (GRID_SIZE_H//self.scale) else self.y_offset
+                self.y_offset = self.y_offset - 1 if self.min_offset < self.y_offset - 1 < 1 else self.y_offset
+                print(self.y_offset)
                 pass
+
+    #TODO исправить нажатие клавиш, что бы не долбить по ним
+    def update_position(self):
+        if self.moving_left is True:
+            pass
+        if self.moving_right is True:
+            pass
+        if self.moving_up is True:
+            pass
+        if self.moving_down is True:
+            pass
