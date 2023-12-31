@@ -4,6 +4,7 @@ import pygame
 import numpy as np
 import math
 import gui
+import colors as c
 
 
 # Здесь можно хранить одиночные функции
@@ -51,13 +52,16 @@ def mutate_genome_new(genome, mutation_chance, new_genome):
 
 
 # Функция отрисовки объектов
-def draw_obj(obj):
+def draw_obj(obj, border_size=1):
     x, y = obj.position
     rect = pygame.Rect((x + gui.camera.x_offset) * (cfg.CELL_SIZE * gui.camera.scale),
                        (y + gui.camera.y_offset) * (cfg.CELL_SIZE * gui.camera.scale),
                        (cfg.CELL_SIZE * gui.camera.scale), (cfg.CELL_SIZE * gui.camera.scale))
     pygame.draw.rect(cfg.screen, obj.color, rect)
-    
+    obj.rect = rect
+    border_rect = rect.inflate(border_size * 2, border_size * 2)
+    if obj.click is True:
+        pygame.draw.rect(cfg.screen,c.BLACK , border_rect, border_size)
 
 def weather_simulation(cycle):
     """

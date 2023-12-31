@@ -50,50 +50,60 @@ class Camera:
             self.x_offset = 0
 
         if self.scale == 2:
-            self.min_offset = -101
+            self.min_offset = -100
         elif self.scale == 3:
-            self.min_offset = -134
+            self.min_offset = -133
 
         if self.scale == 2 and self.y_offset < -100:
             self.y_offset = -100
 
         if self.scale == 2 and self.x_offset < -100:
             self.x_offset = -100
+        self.update_position()
 
     def handle_event(self, event):
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_PLUS or event.key == pygame.K_EQUALS:
                 self.scale = self.scale + 1 if -1 < self.scale + 1 < 4 else self.scale
-                print(self.scale)
             elif event.key == pygame.K_MINUS:
                 self.scale = self.scale - 1 if 0 < self.scale - 1 < 4 else self.scale
-                print(self.scale)
 
-            #TODO перенести обработку смещения в Update_position()
             elif event.key == pygame.K_LEFT:
-                self.x_offset = self.x_offset + 1 if self.min_offset < self.x_offset + 1 < 1 else self.x_offset
-                print(self.x_offset)
+                self.moving_left = True
                 pass
             elif event.key == pygame.K_UP:
-                self.y_offset = self.y_offset + 1 if self.min_offset < self.y_offset + 1 < 1 else self.y_offset
-                print(self.y_offset)
+                self.moving_up = True
                 pass
             elif event.key == pygame.K_RIGHT:
-                self.x_offset = self.x_offset - 1 if self.min_offset < self.x_offset - 1 < 1 else self.x_offset
-                print(self.x_offset)
+                self.moving_right = True
                 pass
             elif event.key == pygame.K_DOWN:
-                self.y_offset = self.y_offset - 1 if self.min_offset < self.y_offset - 1 < 1 else self.y_offset
-                print(self.y_offset)
+                self.moving_down = True
+                pass
+        if event.type == pygame.KEYUP:
+            if event.key == pygame.K_LEFT:
+                self.moving_left = False
+                pass
+            elif event.key == pygame.K_UP:
+                self.moving_up = False
+                pass
+            elif event.key == pygame.K_RIGHT:
+                self.moving_right = False
+                pass
+            elif event.key == pygame.K_DOWN:
+                self.moving_down = False
                 pass
 
-    #TODO исправить нажатие клавиш, что бы не долбить по ним
     def update_position(self):
         if self.moving_left is True:
-            pass
+            self.x_offset = self.x_offset + 1 if self.min_offset < self.x_offset + 1 < 1 else self.x_offset
+
         if self.moving_right is True:
-            pass
+            self.x_offset = self.x_offset - 1 if self.min_offset < self.x_offset - 1 < 1 else self.x_offset
+
         if self.moving_up is True:
+            self.y_offset = self.y_offset + 1 if self.min_offset < self.y_offset + 1 < 1 else self.y_offset
             pass
         if self.moving_down is True:
+            self.y_offset = self.y_offset - 1 if self.min_offset < self.y_offset - 1 < 1 else self.y_offset
             pass

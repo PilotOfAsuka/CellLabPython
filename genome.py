@@ -3,6 +3,9 @@ import configs as cfg
 import func
 import objects as objs
 import surface
+import pygame
+import gui
+import colors as c
 
 food_values = {
     'cell_thinks': {'min': 50, 'max': 30},  # Зависит от температуры
@@ -26,7 +29,9 @@ class BotGenome:
         self.count_of_reproduce = 0
         self.screen_position = x * cfg.CELL_SIZE, y * cfg.CELL_SIZE
         self.iterated = False
-        
+        self.rect = None
+        self.click = False
+
     MAX_ENERGY = 1100  # Максимальный уровень энергии для бота
 
     # функция выполнения генома
@@ -147,6 +152,20 @@ class BotGenome:
                                                                            104, 34, 84)
                                                      )
 
+    def draw_obj(self, border_size=1):
+        """
+        Отрисовка объекта
+        """
+        x, y = self.position
+        rect = pygame.Rect((x + gui.camera.x_offset) * (cfg.CELL_SIZE * gui.camera.scale),
+                           (y + gui.camera.y_offset) * (cfg.CELL_SIZE * gui.camera.scale),
+                           (cfg.CELL_SIZE * gui.camera.scale), (cfg.CELL_SIZE * gui.camera.scale))
+        pygame.draw.rect(cfg.screen, self.color, rect)
+        self.rect = rect
+        border_rect = rect.inflate(border_size * 2, border_size * 2)
+        if self.click is True:
+            pygame.draw.rect(cfg.screen, c.BLACK, border_rect, border_size)
+
 
 class Predator(BotGenome):
     def __init__(self, food=800, x=0, y=0, color=(230, 1, 92), genome=None):
@@ -210,7 +229,7 @@ class Predator(BotGenome):
             food = surface.world_grid[new_y][new_x]
 
             move_cell(self, x, y, new_x, new_y)
-            #func.mutate_genome_new(self.genome, 0.1, food.genome_number)
+            func.mutate_genome_new(self.genome, 0.1, food.genome_number)
             self.food += food.food  # Логика расхода энергии
             
             # Перемещаем УТК
@@ -232,7 +251,10 @@ class Predator(BotGenome):
 
         # Если куда хочет шагнуть клетка есть хищник   
         elif isinstance(surface.world_grid[new_x][new_y], Predator):
-            self.ptr = self_get_next_index(self, step=59)
+            if self.food >= 1000:
+                self.reproduce()
+            else:
+                self.ptr = self_get_next_index(self, step=59)
 
     # Функция деления
     def reproduce(self):

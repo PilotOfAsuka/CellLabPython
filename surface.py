@@ -3,7 +3,7 @@ import func
 import objects as objs
 import gui
 import configs as cfg
-
+import pygame
 # Инициализация двумерного массива мира
 world_grid = [[None for _ in range(cfg.GRID_SIZE_W)] for _ in range(cfg.GRID_SIZE_H)]  # Мир в котором живут клетки
 
@@ -25,7 +25,7 @@ class Surface:
                     if isinstance(obj, genome.BotGenome):
                         if gui.start_stop_button.click is True:
                             obj.execute_genome()
-                        func.draw_obj(obj)
+                        obj.draw_obj()
                         gui.count_of_cell += 1
                     elif isinstance(obj, objs.Food):
                         if gui.start_stop_button.click is True:

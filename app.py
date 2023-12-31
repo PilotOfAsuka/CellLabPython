@@ -33,13 +33,14 @@ class App:
     # Основной цикл
     def loop(self):
         while self.run:
-            self.event()
+
             self.gui.camera.update()
             self.draw()
             self.surface.check_iterated()
             genome.temp, genome.sun_coord = func.weather_simulation(gui.count_of_cycle)
             self.surface.update_surface()
             self.gui.draw_gui()
+            self.event()
             pygame.display.flip()
             main.clock.tick(60)  # FPS пока так топорно меняем скорость циклов
     
