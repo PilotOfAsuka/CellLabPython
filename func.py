@@ -1,9 +1,9 @@
 import random
-import configs as cfg
-import pygame
+from vars import GRID_SIZE_H, GRID_SIZE_W, move_directions, CELL_SIZE, height, width, gui_offset
+from pygame_init import pg, surface
 import numpy as np
 import math
-import gui
+from gui import camera
 import colors as c
 
 
@@ -11,11 +11,11 @@ import colors as c
 
 # Функция для генерации случайной свободной позиции
 def random_position(world_grid):
-    x = random.randint(0, cfg.GRID_SIZE_W - 1)
-    y = random.randint(0, cfg.GRID_SIZE_H - 1)
+    x = random.randint(0, GRID_SIZE_W - 1)
+    y = random.randint(0, GRID_SIZE_H - 1)
     while world_grid[y][x] is not None:
-        x = random.randint(0, cfg.GRID_SIZE_W - 1)
-        y = random.randint(0, cfg.GRID_SIZE_H - 1)
+        x = random.randint(0, GRID_SIZE_W - 1)
+        y = random.randint(0, GRID_SIZE_H - 1)
     return x, y  # Возврат случайных свободных позиций
 
                     
@@ -23,15 +23,16 @@ def random_position(world_grid):
 def get_free_adjacent_positions(position, world_grid):
     x, y = position
     free_positions = []
-    for dx, dy in cfg.move_directions:
-        nx = x + dx if -1 < x + dx < cfg.GRID_SIZE_W else x
-        ny = y + dy if -1 < y + dy < cfg.GRID_SIZE_H else y
+    for dx, dy in move_directions:
+        nx = x + dx if -1 < x + dx < GRID_SIZE_W else x
+        ny = y + dy if -1 < y + dy < GRID_SIZE_H else y
         if world_grid[ny][nx] is None:
             free_positions.append((nx, ny))
     return free_positions  # Возврат свободных позиций
 
 
 # Функция мутации
+
 def mutate_genome(genome):
     mutation_chance = 0.1  # Шанс мутации для каждого гена
     for i in range(len(genome)):
@@ -40,6 +41,7 @@ def mutate_genome(genome):
 
 
 # Функция мутации
+
 def mutate_genome_new(genome, mutation_chance, new_genome):
     """
     genome = Принимает на вход геном
@@ -54,14 +56,15 @@ def mutate_genome_new(genome, mutation_chance, new_genome):
 # Функция отрисовки объектов
 def draw_obj(obj, border_size=1):
     x, y = obj.position
-    rect = pygame.Rect((x + gui.camera.x_offset) * (cfg.CELL_SIZE * gui.camera.scale),
-                       (y + gui.camera.y_offset) * (cfg.CELL_SIZE * gui.camera.scale),
-                       (cfg.CELL_SIZE * gui.camera.scale), (cfg.CELL_SIZE * gui.camera.scale))
-    pygame.draw.rect(cfg.screen, obj.color, rect)
+    rect = pg.Rect((x + camera.x_offset) * (CELL_SIZE * camera.scale),
+                       (y + camera.y_offset) * (CELL_SIZE * camera.scale),
+                       (CELL_SIZE * camera.scale), (CELL_SIZE * camera.scale))
+    pg.draw.rect(surface, obj.color, rect)
     obj.rect = rect
     border_rect = rect.inflate(border_size * 2, border_size * 2)
     if obj.click is True:
-        pygame.draw.rect(cfg.screen,c.BLACK , border_rect, border_size)
+        pg.draw.rect(surface, c.BLACK, border_rect, border_size)
+
 
 def weather_simulation(cycle):
     """
@@ -81,8 +84,8 @@ def weather_simulation(cycle):
 
     # Положение солнца зависит от цикла, оно движется от левого верхнего до правого нижнего угла
     change_every = 10  # изменять каждые _ циклов
-    sun_x = (cycle // change_every) % (cfg.width-cfg.gui_offset)
-    sun_y = (cycle // change_every) % cfg.height
+    sun_x = (cycle // change_every) % (width-gui_offset)
+    sun_y = (cycle // change_every) % height
     return int(temp), (sun_x, sun_y)
 
 

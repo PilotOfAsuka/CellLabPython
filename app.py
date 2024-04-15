@@ -1,6 +1,6 @@
-import configs as cfg
+import vars as cfg
 import pygame
-import surface
+import simulation
 import colors
 import main
 import gui
@@ -36,9 +36,9 @@ class App:
 
             self.gui.camera.update()
             self.draw()
-            self.surface.check_iterated()
+            #self.surface.check_iterated()
             genome.temp, genome.sun_coord = func.weather_simulation(gui.count_of_cycle)
-            self.surface.update_surface()
+            #self.surface.update_surface()
             self.gui.draw_gui()
             self.event()
             pygame.display.flip()

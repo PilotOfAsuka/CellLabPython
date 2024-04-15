@@ -1,8 +1,7 @@
 import random
-import configs as cfg
+import vars as cfg
 import func
 import objects as objs
-import surface
 import pygame
 import gui
 import colors as c

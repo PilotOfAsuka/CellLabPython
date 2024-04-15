@@ -1,7 +1,7 @@
 import colors as c
 import gui
-import surface
-import configs as cfg
+import simulation
+import vars as cfg
 import genome
 import pygame
 
