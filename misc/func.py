@@ -1,5 +1,5 @@
 import random
-from misc.vars import GRID_SIZE_H, GRID_SIZE_W, move_directions, CELL_SIZE, global_vars
+from misc.vars import GRID_SIZE_H, GRID_SIZE_W, move_directions, CELL_SIZE, global_vars, world_grid
 from pygame_init_graphic.pygame_init import pg, surface
 import numpy as np
 import math
@@ -10,7 +10,7 @@ import misc.colors as c
 # Здесь можно хранить одиночные функции
 
 # Функция для генерации случайной свободной позиции
-def random_position(world_grid):
+def random_position():
     x = random.randint(0, GRID_SIZE_W - 1)
     y = random.randint(0, GRID_SIZE_H - 1)
     while world_grid[y][x] is not None:
@@ -20,7 +20,7 @@ def random_position(world_grid):
 
                     
 # функция получения свободного места вокруг
-def get_free_adjacent_positions(position, world_grid):
+def get_free_adjacent_positions(position):
     x, y = position
     free_positions = []
     for dx, dy in move_directions:

@@ -5,6 +5,7 @@ from misc.func import normalize_value, get_global_var, mutate_genome_new, get_fr
 from camera.camera import camera
 from misc import colors as c
 
+
 food_values = {
     'cell_thinks': {'min': 50, 'max': 30},  # Зависит от температуры
     'photosynthesis': {'min': 100, 'max': -50},  # Зависит от расстояния до солнца
@@ -18,10 +19,9 @@ class Food:
         self.food = food
         self.color = color
         self.position = x, y
+        self.x, self.y = self.position
         self.count_of_cycle = 0
         self.genome_number = genome_number
-        self.iterated = False
-        self.click = False
 
     def move(self):
         """
@@ -44,7 +44,7 @@ class Food:
             x, y = self.position
             world_grid[y][x] = None
 
-    def draw_obj(self, border_size=1):
+    def draw_obj(self):
         """
         Отрисовка объекта
         """
@@ -53,10 +53,6 @@ class Food:
                        (y + camera.y_offset) * (CELL_SIZE * camera.scale),
                        (CELL_SIZE * camera.scale), (CELL_SIZE * camera.scale))
         pg.draw.rect(surface, self.color, rect)
-
-        border_rect = rect.inflate(border_size * 2, border_size * 2)
-        if self.click is True:  # Обводка
-            pg.draw.rect(surface, c.BLACK, border_rect, border_size)
 
 
 # Класс BotGenome, определяющий поведение и свойства бота
@@ -67,15 +63,11 @@ class BotGenome:
         self.ptr = 0  # УТК (указатель текущей команды)
         self.food = food
         self.position = x, y
-        self.x = x
-        self.y = y
         self.color = color
         self.count_of_reproduce = 0
+        self.count_of_cycle = 0
         self.screen_position = x * CELL_SIZE, y * CELL_SIZE
-        self.iterated = False
-        self.click = False
-
-    MAX_ENERGY = 1100  # Максимальный уровень энергии для бота
+        self.max_energy = 1100
 
     # Функция команды "Сколько у меня еды?"
     def how_many_food(self):
@@ -148,21 +140,15 @@ class BotGenome:
                 world_grid[y][x] = Food(x=x, y=y, food=300, genome_number=self_get_index_of_bias(self, 1, 64),
                                         color=get_colors_bias(self, 67, 117, 54, 104, 34, 84))
 
-    def draw_obj(self, border_size=1):
+    def draw_obj(self):
         """
         Отрисовка объекта
         """
         x, y = self.position
-        rect = pg.Rect(
-            (x + camera.x_offset) * (CELL_SIZE * camera.scale),
-            (y + camera.y_offset) * (CELL_SIZE * camera.scale),
-            (CELL_SIZE * camera.scale), (CELL_SIZE * camera.scale)
-            )
-
+        rect = pg.Rect((x + camera.x_offset) * (CELL_SIZE * camera.scale),
+                       (y + camera.y_offset) * (CELL_SIZE * camera.scale),
+                       (CELL_SIZE * camera.scale), (CELL_SIZE * camera.scale))
         pg.draw.rect(surface, self.color, rect)
-        border_rect = rect.inflate(border_size * 2, border_size * 2)
-        if self.click is True:
-            pg.draw.rect(surface, c.BLACK, border_rect, border_size)
 
 
 class Predator(BotGenome):
@@ -257,7 +243,7 @@ class Predator(BotGenome):
     # Функция деления
     def reproduce(self):
         # Получаем список свободных позиций вокруг бота
-        free_positions = get_free_adjacent_positions(self.position, world_grid)
+        free_positions = get_free_adjacent_positions(self.position)
 
         if not free_positions:
             x, y = self.position
@@ -323,13 +309,13 @@ class Cell(BotGenome):
         self.food += normalize_value(self.position[1], 0, GRID_SIZE_H,
                                      food_values['photosynthesis']['min'], food_values['photosynthesis']['max'])
         # Ограничиваем максимальное количество энергии
-        self.food = min(self.food, self.MAX_ENERGY)
+        self.food = min(self.food, self.max_energy)
         self.move_ptr()  # Переход УТК
 
     # Функция деления
     def reproduce(self):
         # Получаем список свободных позиций вокруг бота
-        free_positions = get_free_adjacent_positions(self.position, world_grid)
+        free_positions = get_free_adjacent_positions(self.position)
 
         if not free_positions:
             x, y = self.position

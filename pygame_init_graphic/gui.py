@@ -1,5 +1,5 @@
-from pygame_init_graphic.pygame_init import *
-from pygame_init_graphic.pygame_init import pg
+
+from pygame_init_graphic.pygame_init import pg, surface, font, clock
 from misc import colors as c
 from misc.vars import width, height, gui_offset
 from misc.func import get_global_var
@@ -100,12 +100,17 @@ def draw_gui():
               width - gui_offset + gui_offset_x, gui_offset_y + line_text_offset)
 
     # Отрисовка текста кол-ва циклов
-    draw_text("Cycle:", get_global_var("count_of_cycle"),
+    cycle = get_global_var("count_of_cycle")
+    draw_text("Cycle:", cycle,
               width - gui_offset + gui_offset_x, gui_offset_y + line_text_offset * 2)
 
     # Отрисовка текста "Скорость"
     draw_text("Temp.:", get_global_var("temp"),
               width - gui_offset + gui_offset_x, gui_offset_y + line_text_offset * 4)
+
+    # Отрисовка текста "Скорость"
+    draw_text("FPS:", int(clock.get_fps()),
+              width - gui_offset + gui_offset_x, height - line_text_offset)
 
     draw_border()
     start_stop_button.draw()
