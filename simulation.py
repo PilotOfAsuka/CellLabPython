@@ -1,36 +1,36 @@
-from genome import BotGenome, Cell
-from vars import GRID_SIZE_H, GRID_SIZE_W, START_NUM_OF_CELL
-from func import draw_obj, random_position
-from objects import Food
-import gui
-
-
-# Инициализация двумерного массива мира
-world_grid = [[None for _ in range(GRID_SIZE_W)] for _ in range(GRID_SIZE_H)]  # Мир в котором живут клетки
+from genome import Cell, Food, Predator
+from misc.vars import GRID_SIZE_H, GRID_SIZE_W, START_NUM_OF_CELL, world_grid
+from misc.func import random_position, set_global_var, get_global_var
+from pygame_init_graphic import gui
 
 
 def update_surface():
     if gui.start_stop_button.click is True:
-        gui.count_of_cycle += 1
-    gui.count_of_cell = 0
-    gui.count_of_food = 0
+        set_global_var(var="count_of_cycle", value=get_global_var("count_of_cycle") + 1)
+        set_global_var(var="count_of_cells", value=0)
+        set_global_var(var="count_of_food", value=0)
+
+        for y in range(GRID_SIZE_H):
+            for x in range(GRID_SIZE_W):
+                obj = world_grid[y][x]
+                if obj and not obj.iterated:  # Проверяем, не прошел ли объект уже итерацию
+                    if isinstance(obj, Cell) or isinstance(obj, Predator):
+                        obj.execute_genome()
+                        set_global_var(var="count_of_cells", value=get_global_var("count_of_cells") + 1)
+                    elif isinstance(obj, Food):
+                        obj.check_death()
+                        obj.move()
+                        set_global_var(var="count_of_food", value=get_global_var("count_of_food") + 1)
+                    obj.iterated = True  # Устанавливаем флаг, что объект уже прошел итерацию
+
+
+def draw_surface():
     for y in range(GRID_SIZE_H):
         for x in range(GRID_SIZE_W):
             obj = world_grid[y][x]
-            if obj and not obj.iterated:  # Проверяем, не прошел ли объект уже итерацию
-                if isinstance(obj, BotGenome):
-                    if gui.start_stop_button.click is True:
-                        obj.execute_genome()
-                    obj.draw_obj()
-                    gui.count_of_cell += 1
-                elif isinstance(obj, Food):
-                    if gui.start_stop_button.click is True:
-                        obj.count_of_cycle += 1
-                        obj.check_death()
-                        obj.move()
-                    gui.count_of_food += 1
-                    draw_obj(obj)
-                obj.iterated = True  # Устанавливаем флаг, что объект уже прошел итерацию
+            if obj is not None:
+                obj.draw_obj()
+    pass
 
 
 def init_cells():

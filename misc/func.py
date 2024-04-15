@@ -1,10 +1,10 @@
 import random
-from vars import GRID_SIZE_H, GRID_SIZE_W, move_directions, CELL_SIZE, height, width, gui_offset
-from pygame_init import pg, surface
+from misc.vars import GRID_SIZE_H, GRID_SIZE_W, move_directions, CELL_SIZE, global_vars
+from pygame_init_graphic.pygame_init import pg, surface
 import numpy as np
 import math
-from gui import camera
-import colors as c
+from camera.camera import camera
+import misc.colors as c
 
 
 # Здесь можно хранить одиночные функции
@@ -57,8 +57,8 @@ def mutate_genome_new(genome, mutation_chance, new_genome):
 def draw_obj(obj, border_size=1):
     x, y = obj.position
     rect = pg.Rect((x + camera.x_offset) * (CELL_SIZE * camera.scale),
-                       (y + camera.y_offset) * (CELL_SIZE * camera.scale),
-                       (CELL_SIZE * camera.scale), (CELL_SIZE * camera.scale))
+                   (y + camera.y_offset) * (CELL_SIZE * camera.scale),
+                   (CELL_SIZE * camera.scale), (CELL_SIZE * camera.scale))
     pg.draw.rect(surface, obj.color, rect)
     obj.rect = rect
     border_rect = rect.inflate(border_size * 2, border_size * 2)
@@ -82,11 +82,7 @@ def weather_simulation(cycle):
     # Масштабируем синусоиду к диапазону от минимальной до максимальной температуры
     temp = min_temp + (t_sin + 1) * (max_temp - min_temp) / 2
 
-    # Положение солнца зависит от цикла, оно движется от левого верхнего до правого нижнего угла
-    change_every = 10  # изменять каждые _ циклов
-    sun_x = (cycle // change_every) % (width-gui_offset)
-    sun_y = (cycle // change_every) % height
-    return int(temp), (sun_x, sun_y)
+    return int(temp)
 
 
 # функция нормализации значения один диапазон в другой
@@ -116,3 +112,13 @@ def euclidean_distance(point1, point2):
     x2, y2 = point2
     distance = np.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2)
     return int(distance)
+
+
+def set_global_var(var, value):
+    global_vars[var] = value
+    pass
+
+
+def get_global_var(var):
+    value = global_vars.get(var)
+    return value

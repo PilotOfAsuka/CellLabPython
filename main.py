@@ -1,5 +1,5 @@
-from pygame_cycle import pygame_cycle
+from pygame_init_graphic.pygame_cycle import pygame_cycle
 
 # Main.py :D
 if __name__ == "__main__":
-    pygame_cycle(run=True)
+    pygame_cycle.start_cycle(run=True)

@@ -1,10 +1,8 @@
-from pygame_init import *
-from camera.camera import Camera
-from pygame_init import pg
-import colors as c
-from vars import width, height, gui_offset
-
-
+from pygame_init_graphic.pygame_init import *
+from pygame_init_graphic.pygame_init import pg
+from misc import colors as c
+from misc.vars import width, height, gui_offset
+from misc.func import get_global_var
 
 
 # Класс Slider
@@ -71,7 +69,6 @@ count_of_cell = 0  # Счетчик кол-во клеток
 count_of_food = 0  # Счетчик кол-во органики
 count_of_cycle = 0  # Счетчик кол-во циклов
 
-camera = Camera()
 
 start_stop_button = Button(width - gui_offset + gui_offset_x, gui_offset_y + 7 + line_text_offset *
                            3, 80, 25)
@@ -95,12 +92,20 @@ def draw_border():
 def draw_gui():
     draw_gui_rect()
     # Отрисовка текста кол-ва клеток
-    draw_text("Cells:", count_of_cell, width - gui_offset + gui_offset_x, gui_offset_y)
+    draw_text("Cells:", get_global_var("count_of_cells"),
+              width - gui_offset + gui_offset_x, gui_offset_y)
+
     # Отрисовка текста кол-ва органики
-    draw_text("Organic:", count_of_food, width - gui_offset + gui_offset_x, gui_offset_y + line_text_offset)
+    draw_text("Organic:", get_global_var("count_of_food"),
+              width - gui_offset + gui_offset_x, gui_offset_y + line_text_offset)
+
     # Отрисовка текста кол-ва циклов
-    draw_text("Cycle:", count_of_cycle, width - gui_offset + gui_offset_x, gui_offset_y + line_text_offset * 2)
+    draw_text("Cycle:", get_global_var("count_of_cycle"),
+              width - gui_offset + gui_offset_x, gui_offset_y + line_text_offset * 2)
+
     # Отрисовка текста "Скорость"
-    draw_text("Temp.:",0, width - gui_offset + gui_offset_x, gui_offset_y + line_text_offset * 4)
+    draw_text("Temp.:", get_global_var("temp"),
+              width - gui_offset + gui_offset_x, gui_offset_y + line_text_offset * 4)
+
     draw_border()
     start_stop_button.draw()

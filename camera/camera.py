@@ -1,5 +1,5 @@
-from pygame_init import pg
-from vars import width, height
+from pygame_init_graphic.pygame_init import pg
+from misc.vars import width, height
 
 
 class Camera:
@@ -27,11 +27,6 @@ class Camera:
         elif self.scale == 3:
             self.min_offset = -133
 
-        if self.scale == 2 and self.y_offset < -100:
-            self.y_offset = -100
-
-        if self.scale == 2 and self.x_offset < -100:
-            self.x_offset = -100
         self.update_position()
 
     def handle_event(self, event):
@@ -80,3 +75,6 @@ class Camera:
         if self.moving_down is True:
             self.y_offset = self.y_offset - 1 if self.min_offset < self.y_offset - 1 < 1 else self.y_offset
             pass
+
+
+camera = Camera()
