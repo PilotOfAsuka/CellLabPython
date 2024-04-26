@@ -35,13 +35,13 @@ class Slider:
 
 
 class Button:
-    def __init__(self, x, y, w, h):
+    def __init__(self, x, y, w, h, clicked_text=None, non_clicked_text=None):
         self.rect = pg.Rect(x, y, w, h)
         self.click = True
         self.stop_color = (0, 155, 0)
         self.start_color = (155, 0, 0)
-        self.clicked_text = 'Stop'
-        self.non_clicked_text = 'Play'
+        self.clicked_text = clicked_text
+        self.non_clicked_text = non_clicked_text
         self.x = x
         self.y = y
 
@@ -71,7 +71,9 @@ count_of_cycle = 0  # Счетчик кол-во циклов
 
 
 start_stop_button = Button(width - gui_offset + gui_offset_x, gui_offset_y + 7 + line_text_offset *
-                           3, 80, 25)
+                           3, 80, 25, clicked_text="stop", non_clicked_text="play")
+draw_button = Button(width - gui_offset + gui_offset_x, gui_offset_y + 7 + line_text_offset *
+                     5, 80, 25, clicked_text="non_draw", non_clicked_text="draw")
 
 
 def draw_text(text, var, x, y):
@@ -104,13 +106,14 @@ def draw_gui():
     draw_text("Cycle:", cycle,
               width - gui_offset + gui_offset_x, gui_offset_y + line_text_offset * 2)
 
-    # Отрисовка текста "Скорость"
+    # Отрисовка текста "Temp"
     draw_text("Temp.:", get_global_var("temp"),
               width - gui_offset + gui_offset_x, gui_offset_y + line_text_offset * 4)
 
-    # Отрисовка текста "Скорость"
+    # Отрисовка текста "FPS"
     draw_text("FPS:", int(clock.get_fps()),
               width - gui_offset + gui_offset_x, height - line_text_offset)
 
     draw_border()
     start_stop_button.draw()
+    draw_button.draw()

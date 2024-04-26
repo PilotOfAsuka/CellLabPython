@@ -1,10 +1,8 @@
 import random
-from misc.vars import GRID_SIZE_H, GRID_SIZE_W, move_directions, CELL_SIZE, global_vars, world_grid
-from pygame_init_graphic.pygame_init import pg, surface
+from misc.vars import GRID_SIZE_H, GRID_SIZE_W, move_directions, global_vars, world_grid
 import numpy as np
 import math
-from camera.camera import camera
-import misc.colors as c
+from numba import jit
 
 
 # Здесь можно хранить одиночные функции
@@ -53,19 +51,7 @@ def mutate_genome_new(genome, mutation_chance, new_genome):
         genome[i] = new_genome  # Новое значение гена
 
 
-# Функция отрисовки объектов
-def draw_obj(obj, border_size=1):
-    x, y = obj.position
-    rect = pg.Rect((x + camera.x_offset) * (CELL_SIZE * camera.scale),
-                   (y + camera.y_offset) * (CELL_SIZE * camera.scale),
-                   (CELL_SIZE * camera.scale), (CELL_SIZE * camera.scale))
-    pg.draw.rect(surface, obj.color, rect)
-    obj.rect = rect
-    border_rect = rect.inflate(border_size * 2, border_size * 2)
-    if obj.click is True:
-        pg.draw.rect(surface, c.BLACK, border_rect, border_size)
-
-
+@jit()
 def weather_simulation(cycle):
     """
     На вход принимает, текущий цикл.
@@ -86,6 +72,7 @@ def weather_simulation(cycle):
 
 
 # функция нормализации значения один диапазон в другой
+@jit()
 def normalize_value(input_value, original_min, original_max, target_min, target_max):
     """
     input_value= Входное значение

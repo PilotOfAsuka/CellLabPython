@@ -4,10 +4,11 @@ from misc.vars import gen_size, CELL_SIZE, move_directions, GRID_SIZE_H, GRID_SI
 from misc.func import normalize_value, get_global_var, mutate_genome_new, get_free_adjacent_positions
 from camera.camera import camera
 from misc import colors as c
+import numpy as np
 
 
 food_values = {
-    'cell_thinks': {'min': 50, 'max': 30},  # Зависит от температуры
+    'cell_thinks': {'min': 70, 'max': 40},  # Зависит от температуры
     'photosynthesis': {'min': 100, 'max': -50},  # Зависит от расстояния до солнца
     'predator_thinks': {'min':  50, 'max': 5},  # Зависит от температуры
     'predator_move': {'min': 10, 'max': 5},  # Зависит от температуры
@@ -16,9 +17,11 @@ food_values = {
 
 class Genome:
     def __init__(self, dna=None):
-        self.dna = [random.randint(0, 63) for _ in range(gen_size)] if dna is None else dna
+        #self.dna = [random.randint(0, 63) for _ in range(gen_size)] if dna is None else dna
+        self.dna = np.random.randint(0, 64, size=gen_size) if dna is None else dna
         self.ptr = 0  # УТК (указатель текущей команды)
         pass
+
 
     def self_get_next_index_of_bias(self, step, len_of_number):
         """
@@ -70,12 +73,13 @@ class Genome:
 
 
 class Food:
-    def __init__(self, food=50, x=0, y=0, color=c.FOOD_COLOR, genome_number=0):
+    def __init__(self, food=10, x=0, y=0, color=c.FOOD_COLOR, genome_number=0):
         self.food = food
         self.color = color
         self.position = x, y
         self.x, self.y = self.position
         self.count_of_cycle = 0
+        self.count_of_life = 0
         self.genome_number = genome_number
 
     def move(self):
@@ -85,7 +89,7 @@ class Food:
         x, y = self.position
         new_y = y + 1 if -1 < y + 1 < GRID_SIZE_H else y
 
-        if not isinstance(world_grid[new_y][x], Food) and not isinstance(world_grid[new_y][x], BotGenome):
+        if world_grid[new_y][x].__class__ not in (Food, Cell):
 
             # Освобождаем текущую позицию
             world_grid[y][x] = None
@@ -95,7 +99,7 @@ class Food:
         pass
 
     def check_death(self):
-        if self.count_of_cycle >= 10000:
+        if self.count_of_life >= 10000:
             x, y = self.position
             world_grid[y][x] = None
 
@@ -158,15 +162,15 @@ class BotGenome:
             # Перемещаем указатель текущей команды
             self.genome.ptr = self.genome.self_get_next_index(step=2)
         # Если на пути органика
-        elif isinstance(world_grid[new_y][new_x], Food):
+        elif world_grid[new_y][new_x].__class__ is Food:
             # Перемещаем указатель текущей команды
             self.genome.ptr = self.genome.self_get_next_index(step=43)
         # Если на пути клетка
-        elif isinstance(world_grid[new_y][new_x], Cell):
+        elif world_grid[new_y][new_x].__class__ is Cell:
             # Перемещаем указатель текущей команды
             self.genome.ptr = self.genome.self_get_next_index(step=59)
         # Если на пути хищник
-        elif isinstance(world_grid[new_y][new_x], Predator):
+        elif world_grid[new_y][new_x].__class__ is Predator:
             # Перемещаем указатель текущей команды
             self.genome.ptr = self.genome.self_get_next_index(step=24)
             
@@ -180,8 +184,8 @@ class BotGenome:
         if self.food <= 0:  # Условие смерти клетки при отрицательной энергии
             x, y = self.position
             world_grid[y][x] = None  # Удаление бота из сетки
-            if random.random() < 0.1:
-                world_grid[y][x] = Food(x=x, y=y, food=300, genome_number=0,
+            if random.random() < 0.05:
+                world_grid[y][x] = Food(x=x, y=y, food=10, genome_number=0,
                                         color=get_colors_bias(self, 67, 117, 54, 104, 34, 84))
 
     def draw_obj(self):
@@ -209,15 +213,15 @@ class Predator(BotGenome):
             # За то что клетка думает, она теряет энергию
             self.food -= normalize_value(get_global_var("temp"), -15, 15,
                                          food_values['predator_thinks']['min'], food_values['predator_thinks']['max'])
-            self.check_death()
+
             command = self.genome.dna[self.genome.ptr]  # УТК
             self.execute_command(command)  # Выполнение команды генома (УТК)
         
     def execute_command(self, command):
         # Выполнение команды в зависимости от числа
-        if command in range(0, 15):
+        if command in range(0, 20):
             self.move()
-        elif command in range(15, 25):
+        elif command in range(20, 25):
             self.how_many_food()
         elif command in range(25, 40):
             self.is_this_temp()
@@ -235,7 +239,6 @@ class Predator(BotGenome):
         # Логика расхода энергии
         self.food -= normalize_value(get_global_var("temp"), -15, 15,
                                      food_values['predator_move']['min'], food_values['predator_move']['max'])
-        self.check_death()
 
         # Выбираем направление на основе смещения
         move_dir = self.genome.self_get_next_index_of_bias(step=1, len_of_number=len(move_directions))
@@ -252,7 +255,7 @@ class Predator(BotGenome):
             move_cell(self, x, y, new_x, new_y)
             
         # Если куда хочет шагнуть клетка есть еда
-        elif isinstance(world_grid[new_y][new_x], Food):
+        elif world_grid[new_y][new_x].__class__ is Food:
             # Перемещаем клетку
             food = world_grid[new_y][new_x]
 
@@ -264,8 +267,9 @@ class Predator(BotGenome):
             self.genome.ptr = self.genome.self_get_next_index(step=43)
 
         # Если куда хочет шагнуть клетка есть клетка
-        elif isinstance(world_grid[new_y][new_x], Cell):
-            if self.genome.self_get_bias(step=5) in range(1, 5):
+        elif world_grid[new_y][new_x].__class__ is Cell:
+            bot_ = world_grid[new_y][new_x]
+            if bot_.genome.dna[0] in range(0, 10):
                 # Перемещаем клетку
                 move_cell(self, x, y, new_x, new_y)
 
@@ -278,7 +282,7 @@ class Predator(BotGenome):
                 self.genome.ptr = self.genome.self_get_next_index(step=42)
 
         # Если куда хочет шагнуть клетка есть хищник   
-        elif isinstance(world_grid[new_x][new_y], Predator):
+        elif world_grid[new_y][new_x].__class__ is Predator:
             if self.food >= 1000:
                 self.reproduce()
             else:
@@ -326,7 +330,7 @@ class Cell(BotGenome):
             # За то что клетка думает, она теряет энергию
             self.food -= normalize_value(get_global_var("temp"), -15, 15, food_values['predator_thinks']['min'],
                                          food_values['predator_thinks']['max'])
-            self.check_death()
+
             command = self.genome.dna[self.genome.ptr]  # УТК
             self.execute_command(command)  # Выполнение команды генома (УТК)
 
@@ -365,10 +369,10 @@ class Cell(BotGenome):
             x, y = self.position
             # Удаление бота из сетки если Нет свободных позиций для размножения
             world_grid[y][x] = None
-            if random.random() < 0.1:
+            if random.random() < 0.005:
                 # С шансом 10 процентов после смерти бота появляется органика (Если нет места для размножения)
                 world_grid[y][x] = Food(
-                    x=x, y=y, food=300, genome_number=0,
+                    x=x, y=y, food=10, genome_number=0,
                     color=get_colors_bias(self, 67, 117, 54, 104, 34, 84))
             return
 
