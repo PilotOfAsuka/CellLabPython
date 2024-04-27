@@ -124,8 +124,7 @@ class BotGenome:
         self.color = color
         self.count_of_reproduce = 0
         self.count_of_cycle = 0
-        self.screen_position = x * CELL_SIZE, y * CELL_SIZE
-        self.max_energy = 1100
+        self.max_energy = 1000
 
     # Функция команды "Сколько у меня еды?"
     def how_many_food(self):
@@ -149,13 +148,12 @@ class BotGenome:
     # Команда посмотреть    
     def command_view(self):
         # Выбираем направление на основе смещения
-        move_dir = self.genome.self_get_next_index_of_bias(step=1, len_of_number=len(move_directions))
-        dx, dy = move_directions[move_dir]  # Получаем Направление
+        dx, dy = move_directions[self.genome.self_get_next_index_of_bias(step=1, len_of_number=len(move_directions))]
         
         # Получаем точку куда мы смотрим
         x, y = self.position
         new_x = (x + dx) % GRID_SIZE_W
-        new_y = (y + dy) % GRID_SIZE_H
+        new_y = y + dy if -1 < y + dy < GRID_SIZE_H else y
         
         # Если на пути пусто
         if world_grid[new_y][new_x] is None:
@@ -176,9 +174,8 @@ class BotGenome:
             
     # Функция опроса расстояния до солнца и смещения  
     def how_much_distance_to_sun(self):
-        sun_dist = normalize_value(self.position[1], 0, GRID_SIZE_H, 0, 5)
         # Перемещаем указатель текущей команды
-        self.genome.ptr = self.genome.self_get_next_index(step=sun_dist)
+        self.genome.ptr = self.genome.self_get_next_index(step=normalize_value(self.position[1], 0, GRID_SIZE_H, 0, 5))
 
     def check_death(self):
         if self.food <= 0:  # Условие смерти клетки при отрицательной энергии
@@ -214,8 +211,7 @@ class Predator(BotGenome):
             self.food -= normalize_value(get_global_var("temp"), -15, 15,
                                          food_values['predator_thinks']['min'], food_values['predator_thinks']['max'])
 
-            command = self.genome.dna[self.genome.ptr]  # УТК
-            self.execute_command(command)  # Выполнение команды генома (УТК)
+            self.execute_command(self.genome.dna[self.genome.ptr])  # Выполнение команды генома (УТК)
         
     def execute_command(self, command):
         # Выполнение команды в зависимости от числа
@@ -241,9 +237,7 @@ class Predator(BotGenome):
                                      food_values['predator_move']['min'], food_values['predator_move']['max'])
 
         # Выбираем направление на основе смещения
-        move_dir = self.genome.self_get_next_index_of_bias(step=1, len_of_number=len(move_directions))
-        # Получаем Направление
-        dx, dy = move_directions[move_dir]
+        dx, dy = move_directions[self.genome.self_get_next_index_of_bias(step=1, len_of_number=len(move_directions))]
 
         # Получаем текущие и новые координаты
         x, y = self.position
@@ -268,8 +262,7 @@ class Predator(BotGenome):
 
         # Если куда хочет шагнуть клетка есть клетка
         elif world_grid[new_y][new_x].__class__ is Cell:
-            bot_ = world_grid[new_y][new_x]
-            if bot_.genome.dna[0] in range(0, 10):
+            if world_grid[new_y][new_x].genome.dna[0] in range(0, 10):
                 # Перемещаем клетку
                 move_cell(self, x, y, new_x, new_y)
 
@@ -300,7 +293,7 @@ class Predator(BotGenome):
             return
 
         # Выбираем случайную свободную позицию для нового бота
-        x, y = random.choice(free_positions)
+        x, y = free_positions[self.genome.self_get_next_index_of_bias(1, len(free_positions))]
 
         # Копируем геном родителя
         new_genome = self.genome.dna.copy()
@@ -331,8 +324,7 @@ class Cell(BotGenome):
             self.food -= normalize_value(get_global_var("temp"), -15, 15, food_values['predator_thinks']['min'],
                                          food_values['predator_thinks']['max'])
 
-            command = self.genome.dna[self.genome.ptr]  # УТК
-            self.execute_command(command)  # Выполнение команды генома (УТК)
+            self.execute_command(self.genome.dna[self.genome.ptr])  # Выполнение команды генома (УТК)
 
     def execute_command(self, command):
         # Выполнение команды в зависимости от числа
@@ -377,8 +369,7 @@ class Cell(BotGenome):
             return
 
         # Выбираем случайную свободную позицию для нового бота
-        index_free_pos = self.genome.self_get_next_index_of_bias(1, len(free_positions))
-        x, y = free_positions[index_free_pos]
+        x, y = free_positions[self.genome.self_get_next_index_of_bias(1, len(free_positions))]
         # Копируем геном родителя
         new_genome = self.genome.dna.copy()
 
@@ -386,7 +377,6 @@ class Cell(BotGenome):
         mutate_genome_new(new_genome, 0.10, random.randint(0, 63))
 
         # Создаем нового бота с мутированным геномом
-        new_color = (50, 192 + self.genome.dna[0], 50)  # Смещаем цвета
 
         if self.count_of_reproduce == 10 and self.genome.self_get_next_index_of_bias(step=2, len_of_number=2) == 1:
             new_bot = Predator(food=self.food // 2, x=x, y=y,
@@ -395,7 +385,7 @@ class Cell(BotGenome):
             self.food //= 4  # Разделяем энергию между родительской и дочерней клетки
         else:
             new_bot = Cell(food=self.food // 4, x=x, y=y,
-                           color=new_color, genome=Genome(dna=new_genome))  # Создание нового бота
+                           color=(50, 192 + self.genome.dna[0], 50), genome=Genome(dna=new_genome))  # Создание нового бота
             world_grid[y][x] = new_bot  # Помещаем нового бота в мир
             self.food //= 4  # Разделяем энергию между родительской и дочерней клетки 
             
@@ -415,7 +405,6 @@ def move_cell(self, x, y, new_x, new_y):
     # Перемещаем бота на новую позицию
     world_grid[new_y][new_x] = self
     self.position = new_x, new_y
-
 
 
 def get_colors_bias(self, first_min, first_max, second_min, second_max, third_min, third_max):

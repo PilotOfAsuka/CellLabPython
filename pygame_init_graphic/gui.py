@@ -70,10 +70,8 @@ count_of_food = 0  # Счетчик кол-во органики
 count_of_cycle = 0  # Счетчик кол-во циклов
 
 
-start_stop_button = Button(width - gui_offset + gui_offset_x, gui_offset_y + 7 + line_text_offset *
-                           3, 80, 25, clicked_text="stop", non_clicked_text="play")
-draw_button = Button(width - gui_offset + gui_offset_x, gui_offset_y + 7 + line_text_offset *
-                     5, 80, 25, clicked_text="non_draw", non_clicked_text="draw")
+start_stop_button = Button(width - gui_offset + gui_offset_x, height - line_text_offset * 2, 160, 25, clicked_text="stop", non_clicked_text="play")
+draw_button = Button(width - gui_offset + gui_offset_x, height - line_text_offset * 3, 160, 25, clicked_text="non_draw", non_clicked_text="draw")
 
 
 def draw_text(text, var, x, y):
@@ -108,7 +106,7 @@ def draw_gui():
 
     # Отрисовка текста "Temp"
     draw_text("Temp.:", get_global_var("temp"),
-              width - gui_offset + gui_offset_x, gui_offset_y + line_text_offset * 4)
+              width - gui_offset + gui_offset_x, gui_offset_y + line_text_offset * 3)
 
     # Отрисовка текста "FPS"
     draw_text("FPS:", int(clock.get_fps()),
