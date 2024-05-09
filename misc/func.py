@@ -2,7 +2,7 @@ import random
 from misc.vars import GRID_SIZE_H, GRID_SIZE_W, move_directions, global_vars, world_grid
 import numpy as np
 import math
-from numba import jit
+
 
 
 # Здесь можно хранить одиночные функции
@@ -51,7 +51,7 @@ def mutate_genome_new(genome, mutation_chance, new_genome):
         genome[i] = new_genome  # Новое значение гена
 
 
-@jit()
+
 def weather_simulation(cycle):
     """
     На вход принимает, текущий цикл.
@@ -72,7 +72,7 @@ def weather_simulation(cycle):
 
 
 # функция нормализации значения один диапазон в другой
-@jit()
+
 def normalize_value(input_value, original_min, original_max, target_min, target_max):
     """
     input_value= Входное значение
@@ -109,3 +109,5 @@ def set_global_var(var, value):
 def get_global_var(var):
     value = global_vars.get(var)
     return value
+
+

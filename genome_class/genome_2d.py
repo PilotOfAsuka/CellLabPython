@@ -1,7 +1,8 @@
 import random
 from pygame_init_graphic.pygame_init import pg, surface
-from misc.vars import gen_size, CELL_SIZE, move_directions, GRID_SIZE_H, GRID_SIZE_W, world_grid
+from misc.vars import gen_size, CELL_SIZE, move_directions, GRID_SIZE_H, GRID_SIZE_W, world_grid, world_grid_2d
 from misc.func import normalize_value, get_global_var, mutate_genome_new, get_free_adjacent_positions
+from misc.func_2d import get_index, get_coord_from_index, get_free_adjacent_2d_positions
 from camera.camera import camera
 from misc import colors as c
 import numpy as np
@@ -9,7 +10,7 @@ import numpy as np
 
 food_values = {
     'cell_thinks': {'min': 40, 'max': 20},  # Зависит от температуры
-    'photosynthesis': {'min': 55, 'max': 0},  # Зависит от расстояния до солнца
+    'photosynthesis': {'min': 100, 'max': 0},  # Зависит от расстояния до солнца
     'predator_thinks': {'min':  10, 'max': 5},  # Зависит от температуры
     'predator_move': {'min': 5, 'max': 1},  # Зависит от температуры
 }
@@ -17,7 +18,6 @@ food_values = {
 
 class Genome:
     def __init__(self, dna=None):
-        #self.dna = [random.randint(0, 63) for _ in range(gen_size)] if dna is None else dna
         self.dna = np.random.randint(0, 64, size=gen_size) if dna is None else dna
         self.ptr = 0  # УТК (указатель текущей команды)
         pass
@@ -89,7 +89,7 @@ class Food:
         x, y = self.position
         new_y = y + 1 if -1 < y + 1 < GRID_SIZE_H else y
 
-        if world_grid[new_y][x].__class__ not in (Food, Cell):
+        if world_grid[new_y][x].__class__ not in (Food, Cell_2d):
 
             # Освобождаем текущую позицию
             world_grid[y][x] = None
@@ -115,12 +115,13 @@ class Food:
 
 
 # Класс BotGenome, определяющий поведение и свойства бота
-class BotGenome:
+class BotGenome_2d:
     def __init__(self, food=500, x=0, y=0, color=(50, 255, 50), genome=None):
         # Инициализация генома с заданным размером
         self.genome = Genome() if genome is None else genome
         self.food = food
         self.position = x, y
+        self.index = get_index(x, y)
         self.color = color
         self.count_of_reproduce = 0
         self.count_of_cycle = 0
@@ -154,21 +155,23 @@ class BotGenome:
         x, y = self.position
         new_x = (x + dx) % GRID_SIZE_W
         new_y = y + dy if -1 < y + dy < GRID_SIZE_H else y
+
+        index = get_index(new_x, new_y)
         
         # Если на пути пусто
-        if world_grid[new_y][new_x] is None:
+        if world_grid_2d[index] is None:
             # Перемещаем указатель текущей команды
             self.genome.ptr = self.genome.self_get_next_index(step=2)
         # Если на пути органика
-        elif world_grid[new_y][new_x].__class__ is Food:
+        elif world_grid_2d[index].__class__ is Food:
             # Перемещаем указатель текущей команды
             self.genome.ptr = self.genome.self_get_next_index(step=43)
         # Если на пути клетка
-        elif world_grid[new_y][new_x].__class__ is Cell:
+        elif world_grid_2d[index].__class__ is Cell_2d:
             # Перемещаем указатель текущей команды
             self.genome.ptr = self.genome.self_get_next_index(step=59)
         # Если на пути хищник
-        elif world_grid[new_y][new_x].__class__ is Predator:
+        elif world_grid_2d[index].__class__ is Predator:
             # Перемещаем указатель текущей команды
             self.genome.ptr = self.genome.self_get_next_index(step=24)
             
@@ -179,11 +182,11 @@ class BotGenome:
 
     def check_death(self):
         if self.food <= 0:  # Условие смерти клетки при отрицательной энергии
-            x, y = self.position
-            world_grid[y][x] = None  # Удаление бота из сетки
-            if random.random() < 0.1:
-                world_grid[y][x] = Food(x=x, y=y, food=100, genome_number=0,
-                                        color=get_colors_bias(self, 67, 117, 54, 104, 34, 84))
+
+            world_grid_2d[self.index] = None  # Удаление бота из сетки
+            #if random.random() < 0.1:
+                #world_grid[y][x] = Food(x=x, y=y, food=100, genome_number=0,
+                                        #color=get_colors_bias(self, 67, 117, 54, 104, 34, 84))
 
     def draw_obj(self):
         """
@@ -196,7 +199,7 @@ class BotGenome:
         pg.draw.rect(surface, self.color, rect)
 
 
-class Predator(BotGenome):
+class Predator(BotGenome_2d):
     def __init__(self, food=800, x=0, y=0, color=(230, 1, 92), genome=None):
         super().__init__(food, x, y, color, genome)
         
@@ -261,7 +264,7 @@ class Predator(BotGenome):
             self.genome.ptr = self.genome.self_get_next_index(step=24)
 
         # Если куда хочет шагнуть клетка есть клетка
-        elif world_grid[new_y][new_x].__class__ is Cell:
+        elif world_grid[new_y][new_x].__class__ is Cell_2d:
             if world_grid[new_y][new_x].genome.self_get_bias(step=1) in range(32):
                 # Перемещаем клетку
                 move_cell(self, x, y, new_x, new_y)
@@ -306,7 +309,7 @@ class Predator(BotGenome):
         self.food //= 4  # Разделяем энергию между родительской и дочерней клетки
 
 
-class Cell(BotGenome):
+class Cell_2d(BotGenome_2d):
     def __init__(self, food=500, x=0, y=0, color=(0, 255, 0), genome=None):
         super().__init__(food, x, y, color, genome)
 
@@ -361,25 +364,27 @@ class Cell(BotGenome):
             return
 
         # Выбираем случайную свободную позицию для нового бота
-        x, y = free_positions[self.genome.self_get_next_index_of_bias(1, len(free_positions))]
+        new_x, new_y = free_positions[self.genome.self_get_next_index_of_bias(1, len(free_positions))]
         # Копируем геном родителя
         new_genome = self.genome.dna.copy()
+        new_index = get_index(new_x, new_y)
 
         # Проводим мутацию в геноме
         mutate_genome_new(new_genome, 0.5, random.randint(0, 63))
 
         # Создаем нового бота с мутированным геномом
-
+        '''
         if self.genome.self_get_bias(step=1) in range(20):
             new_bot = Predator(food=self.food // 2, x=x, y=y,
                                color=(230, 1, 92), genome=Genome(dna=new_genome))  # Создание нового бота
             world_grid[y][x] = new_bot  # Помещаем нового бота в мир
             self.food //= 4  # Разделяем энергию между родительской и дочерней клетки
-        else:
-            new_bot = Cell(food=self.food // 4, x=x, y=y,
-                           color=(50, 192 + self.genome.dna[0], 50), genome=Genome(dna=new_genome))  # Создание нового бота
-            world_grid[y][x] = new_bot  # Помещаем нового бота в мир
-            self.food //= 4  # Разделяем энергию между родительской и дочерней клетки 
+        '''
+
+        new_bot = Cell_2d(food=self.food // 4, x=new_x, y=new_y,
+                       color=(50, 192 + self.genome.dna[0], 50), genome=Genome(dna=new_genome))  # Создание нового бота
+        world_grid_2d[new_index] = new_bot  # Помещаем нового бота в мир
+        self.food //= 4  # Разделяем энергию между родительской и дочерней клетки
             
         self.count_of_reproduce += 1
 

@@ -2,11 +2,11 @@ from pygame_init_graphic.pygame_init import *
 from pygame_init_graphic.gui import draw_gui, start_stop_button, draw_button
 from camera.camera import camera
 from misc.colors import BKG_COLOR
-from simulation import update_surface, draw_surface, init_cells
+from simulation import update_surface, draw_surface, init_cells, init_2d_cells, draw_2d_surface
 from misc.vars import FPS
 
-init_cells()
-
+#init_cells()
+init_2d_cells()
 
 def start_cycle(run=False):
     while run:
@@ -21,7 +21,10 @@ def start_cycle(run=False):
         camera.update()
 
         update_surface()
-        draw_surface()
+        draw_2d_surface()
+
+
+        #draw_surface()
 
         draw_gui()
         pg.display.flip()

@@ -1,6 +1,6 @@
 
 # Установка размеров окна и его параметров
-RES = width, height = 1000, 800
+RES = width, height = 1200, 800
 gui_offset = 200  # Отступ справа от края для интерфейса
 FPS = 60
 
@@ -28,3 +28,6 @@ global_vars = {"count_of_cycle": 0, "count_of_food": 0, "count_of_cells": 0, "te
 
 # Инициализация двумерного массива мира
 world_grid = [[None for _ in range(GRID_SIZE_W)] for _ in range(GRID_SIZE_H)]  # Мир в котором живут клетки
+
+# Инициализация одномерного массива
+world_grid_2d = [None for _ in range(GRID_SIZE_W * GRID_SIZE_H)]
