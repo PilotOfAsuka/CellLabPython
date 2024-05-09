@@ -8,7 +8,7 @@ import numpy as np
 
 
 food_values = {
-    'cell_thinks': {'min': 40, 'max': 20},  # Зависит от температуры
+    'cell_thinks': {'min': 30, 'max': 20},  # Зависит от температуры
     'photosynthesis': {'min': 55, 'max': 0},  # Зависит от расстояния до солнца
     'predator_thinks': {'min':  10, 'max': 5},  # Зависит от температуры
     'predator_move': {'min': 5, 'max': 1},  # Зависит от температуры
@@ -66,7 +66,7 @@ class Genome:
         self.ptr = (self.ptr + self.dna[self.ptr]) % len(self.dna)
 
     # Функция перемещения указателя текущей команды
-    def move_ptr(self):
+    def  move_ptr(self):
         # Перемещения УТК к следующей команде
         self.ptr = (self.ptr + 1) % len(self.dna)
 

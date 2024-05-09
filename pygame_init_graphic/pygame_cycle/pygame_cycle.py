@@ -5,8 +5,9 @@ from misc.colors import BKG_COLOR
 from simulation import update_surface, draw_surface, init_cells, init_2d_cells, draw_2d_surface
 from misc.vars import FPS
 
-#init_cells()
-init_2d_cells()
+
+
+init_cells()
 
 def start_cycle(run=False):
     while run:
@@ -21,10 +22,7 @@ def start_cycle(run=False):
         camera.update()
 
         update_surface()
-        draw_2d_surface()
-
-
-        #draw_surface()
+        draw_surface()
 
         draw_gui()
         pg.display.flip()

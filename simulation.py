@@ -6,13 +6,15 @@ from misc.func_2d import get_index
 from pygame_init_graphic import gui
 
 
+
+
 def update_surface():
     if gui.start_stop_button.click is True:
         set_global_var(var="temp", value=weather_simulation(get_global_var("count_of_cycle")))
         set_global_var(var="count_of_cells", value=0)
         set_global_var(var="count_of_food", value=0)
-        #calculate_surface()
-        calculate_2d_surface()
+        calculate_surface()
+        #calculate_2d_surface()
 
 
 def draw_surface():
@@ -84,3 +86,4 @@ def init_2d_cells():
         index = get_index(free_x,free_y)
         world_grid_2d[index] = bot
     pass
+
