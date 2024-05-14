@@ -1,19 +1,22 @@
 import random
-from misc.vars import GRID_SIZE_H, GRID_SIZE_W, move_directions, global_vars, world_grid
+from misc.vars import GRID_SIZE_H, GRID_SIZE_W, move_directions, world_grid, CELL_SIZE, global_vars
 import numpy as np
 import math
+from camera.camera import camera
+from pygame_init_graphic.pygame_init import pg, surface
 
 
 
 # Здесь можно хранить одиночные функции
 
 # Функция для генерации случайной свободной позиции
-def random_position():
-    x = random.randint(0, GRID_SIZE_W - 1)
-    y = random.randint(0, GRID_SIZE_H - 1)
+
+def random_position() -> tuple:
+    x: int = random.randint(0, GRID_SIZE_W - 1)
+    y: int = random.randint(0, GRID_SIZE_H - 1)
     while world_grid[y][x] is not None:
-        x = random.randint(0, GRID_SIZE_W - 1)
-        y = random.randint(0, GRID_SIZE_H - 1)
+        x: int = random.randint(0, GRID_SIZE_W - 1)
+        y: int = random.randint(0, GRID_SIZE_H - 1)
     return x, y  # Возврат случайных свободных позиций
 
                     
@@ -49,6 +52,7 @@ def mutate_genome_new(genome, mutation_chance, new_genome):
     i = random.randint(0, 63)
     if random.random() < mutation_chance:
         genome[i] = new_genome  # Новое значение гена
+    return genome
 
 
 
@@ -110,4 +114,22 @@ def get_global_var(var):
     value = global_vars.get(var)
     return value
 
+def draw_obj(bot):
+    """
+    Отрисовка объекта
+    """
+    x, y = bot[1:3]
+    color_bias = bot[3]
+    colors = [50, 150 + color_bias, 50]
+    rect = pg.Rect((x + camera.x_offset) * (CELL_SIZE * camera.scale),
+                   (y + camera.y_offset) * (CELL_SIZE * camera.scale),
+                   (CELL_SIZE * camera.scale), (CELL_SIZE * camera.scale))
+    pg.draw.rect(surface, colors, rect)
 
+
+def get_colors_bias(bot, first_min, first_max, second_min, second_max, third_min, third_max):
+    colors = (max(min(bot[3] % 255, first_max), first_min),
+              max(min(bot[3] % 255, second_max), second_min),
+              max(min(bot[3] % 255, third_max), third_min))
+
+    return colors

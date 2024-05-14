@@ -2,12 +2,15 @@ from pygame_init_graphic.pygame_init import *
 from pygame_init_graphic.gui import draw_gui, start_stop_button, draw_button
 from camera.camera import camera
 from misc.colors import BKG_COLOR
-from simulation import update_surface, draw_surface, init_cells, init_2d_cells, draw_2d_surface
+from simulation import update_surface, draw_surface
 from misc.vars import FPS
 
-
+from genome_class.init_new_genome import init_cells
 
 init_cells()
+
+
+
 
 def start_cycle(run=False):
     while run:

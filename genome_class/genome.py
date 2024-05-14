@@ -399,9 +399,10 @@ def move_cell(self, x, y, new_x, new_y):
     self.position = new_x, new_y
 
 
-def get_colors_bias(self, first_min, first_max, second_min, second_max, third_min, third_max):
-    colors = (max(min(self.genome.dna[0] % 255, first_max), first_min),
-              max(min(self.genome.dna[0] % 255, second_max), second_min),
-              max(min(self.genome.dna[0] % 255, third_max), third_min))
+def get_colors_bias(bot, first_min, first_max, second_min, second_max, third_min, third_max):
+
+    colors = (max(min(bot[3] % 255, first_max), first_min),
+              max(min(bot[3] % 255, second_max), second_min),
+              max(min(bot[3] % 255, third_max), third_min))
 
     return colors
