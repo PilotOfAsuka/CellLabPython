@@ -377,7 +377,7 @@ class Cell(BotGenome):
             self.food //= 4  # Разделяем энергию между родительской и дочерней клетки
         else:
             new_bot = Cell(food=self.food // 4, x=x, y=y,
-                           color=(50, 192 + self.genome.dna[0], 50), genome=Genome(dna=new_genome))  # Создание нового бота
+                           color=(50, 150 + self.genome.dna[0], 50), genome=Genome(dna=new_genome))  # Создание нового бота
             world_grid[y][x] = new_bot  # Помещаем нового бота в мир
             self.food //= 4  # Разделяем энергию между родительской и дочерней клетки 
             
@@ -399,10 +399,9 @@ def move_cell(self, x, y, new_x, new_y):
     self.position = new_x, new_y
 
 
-def get_colors_bias(bot, first_min, first_max, second_min, second_max, third_min, third_max):
-
-    colors = (max(min(bot[3] % 255, first_max), first_min),
-              max(min(bot[3] % 255, second_max), second_min),
-              max(min(bot[3] % 255, third_max), third_min))
+def get_colors_bias(self, first_min, first_max, second_min, second_max, third_min, third_max):
+    colors = (max(min(self.genome.dna[0] % 255, first_max), first_min),
+              max(min(self.genome.dna[0] % 255, second_max), second_min),
+              max(min(self.genome.dna[0] % 255, third_max), third_min))
 
     return colors

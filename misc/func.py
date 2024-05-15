@@ -120,7 +120,8 @@ def draw_obj(bot):
     """
     x, y = bot[1:3]
     color_bias = bot[3]
-    colors = [50, 150 + color_bias, 50]
+    second_color_value = 100 + color_bias
+    colors = [50, max(0, min(255, second_color_value)), 50]
     rect = pg.Rect((x + camera.x_offset) * (CELL_SIZE * camera.scale),
                    (y + camera.y_offset) * (CELL_SIZE * camera.scale),
                    (CELL_SIZE * camera.scale), (CELL_SIZE * camera.scale))

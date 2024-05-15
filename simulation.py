@@ -1,4 +1,4 @@
-from misc.vars import world_grid, global_vars
+from misc.vars import world_grid, GRID_SIZE_H, GRID_SIZE_W
 from misc.func import set_global_var, get_global_var, weather_simulation, draw_obj
 from genome_class.cell_exe import execute_genome
 from pygame_init_graphic import gui
@@ -24,11 +24,11 @@ def draw_surface():
 
 # Цикл обработки двумерного массива
 def calculate_surface():
-    for y, row in enumerate(world_grid):
-        for x, obj in enumerate(row):
+    for y in range(GRID_SIZE_H):
+        for x in range(GRID_SIZE_W):
+            obj = world_grid[y][x]
             if obj is not None:  # Проверяем, не прошел ли объект уже итерацию
                 execute_genome(bot=obj)
-
                 set_global_var(var="count_of_cells", value=get_global_var("count_of_cells") + 1)
 
     set_global_var(var="count_of_cycle", value=get_global_var("count_of_cycle") + 1)

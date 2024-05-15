@@ -96,11 +96,11 @@ def reproduce(bot):
     # Копируем геном родителя
     dna = bot[6:]
     new_dna = dna.copy()
-
+    color = bot[3]
     # Проводим мутацию в геноме
-    new_mutate_dna = mutate_genome_new(new_dna, 0.5, random.randint(0, 63))
+    new_mutate_dna = mutate_genome_new(new_dna, 1, random.randint(0, 63))
     new_food = bot[5] // 2
     # Создаем нового бота с мутированным геномом
-    new_bot = create_one_new_cell(type_of_cell=0, x=new_x, y=new_y, color_bias=bot[3], food=new_food, dna=new_mutate_dna)
+    new_bot = create_one_new_cell(type_of_cell=0, x=new_x, y=new_y, color_bias=color, food=new_food, dna=new_mutate_dna)
 
     world_grid[new_y][new_x] = new_bot
