@@ -1,9 +1,9 @@
 import random
-from pygame_init_graphic.pygame_init import pg, surface
-from misc.vars import gen_size, CELL_SIZE, move_directions, GRID_SIZE_H, GRID_SIZE_W, world_grid
-from misc.func import normalize_value, get_global_var, mutate_genome_new, get_free_adjacent_positions
-from camera.camera import camera
-from misc import colors as c
+
+
+from vars import gen_size, move_directions, GRID_SIZE_H, GRID_SIZE_W, world_grid
+from func import normalize_value, get_global_var, mutate_genome_new, get_free_adjacent_positions
+import colors as c
 import numpy as np
 
 
@@ -82,6 +82,9 @@ class Food:
         self.count_of_life = 0
         self.genome_number = genome_number
 
+    def __str__(self):
+        return 'O'
+
     def move(self):
         """
         Перемещение объекта
@@ -108,10 +111,6 @@ class Food:
         Отрисовка объекта
         """
         x, y = self.position
-        rect = pg.Rect((x + camera.x_offset) * (CELL_SIZE * camera.scale),
-                       (y + camera.y_offset) * (CELL_SIZE * camera.scale),
-                       (CELL_SIZE * camera.scale), (CELL_SIZE * camera.scale))
-        pg.draw.rect(surface, self.color, rect)
 
 
 # Класс BotGenome, определяющий поведение и свойства бота
@@ -125,6 +124,8 @@ class BotGenome:
         self.count_of_reproduce = 0
         self.count_of_cycle = 0
         self.max_energy = 1000
+
+
 
     # Функция команды "Сколько у меня еды?"
     def how_many_food(self):
@@ -190,16 +191,15 @@ class BotGenome:
         Отрисовка объекта
         """
         x, y = self.position
-        rect = pg.Rect((x + camera.x_offset) * (CELL_SIZE * camera.scale),
-                       (y + camera.y_offset) * (CELL_SIZE * camera.scale),
-                       (CELL_SIZE * camera.scale), (CELL_SIZE * camera.scale))
-        pg.draw.rect(surface, self.color, rect)
 
 
 class Predator(BotGenome):
     def __init__(self, food=800, x=0, y=0, color=(230, 1, 92), genome=None):
         super().__init__(food, x, y, color, genome)
-        
+
+    def __repr__(self):
+        return '█'  # Закрашенный пиксель
+
     # Функция выполнения генома
     def execute_genome(self):
         # Проверка на смерть бота, если его пищи нет
@@ -310,8 +310,10 @@ class Cell(BotGenome):
     def __init__(self, food=500, x=0, y=0, color=(0, 255, 0), genome=None):
         super().__init__(food, x, y, color, genome)
 
-        # Функция выполнения генома
+    def __repr__(self):
+        return '█'  # Закрашенный пиксель
 
+    # Функция выполнения генома
     def execute_genome(self):
         # Проверка на смерть бота, если его пищи нет
         self.check_death()

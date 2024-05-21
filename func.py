@@ -1,16 +1,20 @@
+import os
 import random
-from misc.vars import GRID_SIZE_H, GRID_SIZE_W, move_directions, world_grid, CELL_SIZE, global_vars
+import subprocess
+
+from vars import GRID_SIZE_H, GRID_SIZE_W, move_directions, world_grid, CELL_SIZE, global_vars
 import numpy as np
 import math
-from camera.camera import camera
-from pygame_init_graphic.pygame_init import pg, surface
 
 
 
 # Здесь можно хранить одиночные функции
 
-# Функция для генерации случайной свободной позиции
+def cls():
+    """Функция очистки терминала"""
+    subprocess.call('clear' if os.name == 'posix' else 'cls', shell=True)
 
+# Функция для генерации случайной свободной позиции
 def random_position() -> tuple:
     x: int = random.randint(0, GRID_SIZE_W - 1)
     y: int = random.randint(0, GRID_SIZE_H - 1)
@@ -114,18 +118,6 @@ def get_global_var(var):
     value = global_vars.get(var)
     return value
 
-def draw_obj(bot):
-    """
-    Отрисовка объекта
-    """
-    x, y = bot[1:3]
-    color_bias = bot[3]
-    second_color_value = 100 + color_bias
-    colors = [50, max(0, min(255, second_color_value)), 50]
-    rect = pg.Rect((x + camera.x_offset) * (CELL_SIZE * camera.scale),
-                   (y + camera.y_offset) * (CELL_SIZE * camera.scale),
-                   (CELL_SIZE * camera.scale), (CELL_SIZE * camera.scale))
-    pg.draw.rect(surface, colors, rect)
 
 
 def get_colors_bias(bot, first_min, first_max, second_min, second_max, third_min, third_max):

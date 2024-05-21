@@ -1,14 +1,13 @@
 
 # Установка размеров окна и его параметров
-RES = width, height = 1200, 800
-gui_offset = 200  # Отступ справа от края для интерфейса
+RES = width, height = 800, 800
 FPS = 120
 
 # Мир состоит из клеточек
-CELL_SIZE = 3  # Размер клетки изменяя этот параметр меняется масштаб
-GRID_SIZE_W = (width - gui_offset) // CELL_SIZE  # Задаем ширину сетки мира (-200 Это отступ для интерфейса)
+CELL_SIZE = 5  # Размер клетки изменяя этот параметр меняется масштаб
+GRID_SIZE_W = width // CELL_SIZE  # Задаем ширину сетки мира (-200 Это отступ для интерфейса)
 GRID_SIZE_H = height // CELL_SIZE  # Задаем высоту сетки мира
-START_NUM_OF_CELL = 10000  # Стартовое число клеток при создании мира
+START_NUM_OF_CELL = 1000  # Стартовое число клеток при создании мира
 gen_size = 64  # Размер гена
 
 # Кортеж направлений
@@ -32,7 +31,9 @@ food_values = {
 
 
 # Глобальные переменные
-global_vars = {"count_of_cycle": 0, "count_of_food": 0, "count_of_cells": 0, "temp": 0, }
+global_vars = {"count_of_cycle": 0, "count_of_food": 0, "count_of_cells": 0, "temp": 0, "count_of_predators": 0}
 
 # Инициализация двумерного массива мира
 world_grid = [[None for _ in range(GRID_SIZE_W)] for _ in range(GRID_SIZE_H)]  # Мир в котором живут клетки
+
+to_draw_obj = []
