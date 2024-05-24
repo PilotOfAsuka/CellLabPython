@@ -37,3 +37,4 @@ global_vars = {"count_of_cycle": 0, "count_of_food": 0, "count_of_cells": 0, "te
 world_grid = [[None for _ in range(GRID_SIZE_W)] for _ in range(GRID_SIZE_H)]  # Мир в котором живут клетки
 
 to_draw_obj = []
+
