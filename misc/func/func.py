@@ -2,10 +2,9 @@ import os
 import random
 import subprocess
 
-from vars import GRID_SIZE_H, GRID_SIZE_W, move_directions, world_grid, CELL_SIZE, global_vars
+from misc.vars import GRID_SIZE_H, GRID_SIZE_W, move_directions, world_grid, global_vars
 import numpy as np
 import math
-
 
 
 # Здесь можно хранить одиночные функции
@@ -13,6 +12,7 @@ import math
 def cls():
     """Функция очистки терминала"""
     subprocess.call('clear' if os.name == 'posix' else 'cls', shell=True)
+
 
 # Функция для генерации случайной свободной позиции
 def random_position() -> tuple:
@@ -23,7 +23,7 @@ def random_position() -> tuple:
         y: int = random.randint(0, GRID_SIZE_H - 1)
     return x, y  # Возврат случайных свободных позиций
 
-                    
+
 # функция получения свободного места вокруг
 def get_free_adjacent_positions(position):
     x, y = position
@@ -46,10 +46,9 @@ def mutate_genome(genome):
 
 
 # Функция мутации
-
 def mutate_genome_new(genome, mutation_chance, new_genome):
     """
-    genome = Принимает на вход геном
+    BioSystemClass = Принимает на вход геном
     Mutation_chance = шанс мутации
     new_genome = новое значение
     """
@@ -57,7 +56,6 @@ def mutate_genome_new(genome, mutation_chance, new_genome):
     if random.random() < mutation_chance:
         genome[i] = new_genome  # Новое значение гена
     return genome
-
 
 
 def weather_simulation(cycle):
@@ -119,10 +117,3 @@ def get_global_var(var):
     return value
 
 
-
-def get_colors_bias(bot, first_min, first_max, second_min, second_max, third_min, third_max):
-    colors = (max(min(bot[3] % 255, first_max), first_min),
-              max(min(bot[3] % 255, second_max), second_min),
-              max(min(bot[3] % 255, third_max), third_min))
-
-    return colors
