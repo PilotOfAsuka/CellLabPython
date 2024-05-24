@@ -3,7 +3,8 @@
 ## Обзор
 Этот проект представляет собой симуляцию клеток на основе генетического алгоритма, реализованную с использованием Python и Pygame. Это мой первый проект.
 
-<img width="300" alt="Снимок экрана 2023-12-30 в 18 17 06" src="https://github.com/PilotOfAsuka/CellLabPython/assets/150352161/86b87f0f-9ac3-44b9-9a6e-1331b09babe3">
+
+<img width="400" alt="Снимок экрана 2024-05-21 в 20 47 32" src="https://github.com/PilotOfAsuka/CellLabPython/assets/150352161/c4ce17fb-ecb8-4a11-ad51-0ddac6f00dda">
 
 
 ## Основные компоненты
