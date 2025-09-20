@@ -12,6 +12,7 @@ def update_surface():
 
 
 def draw_surface():
+
     for y in range(GRID_SIZE_H):
         for x in range(GRID_SIZE_W):
             obj = world_grid[y][x]
@@ -24,17 +25,22 @@ def calculate_surface():
     for y in range(GRID_SIZE_H):
         for x in range(GRID_SIZE_W):
             obj = world_grid[y][x]
-            if obj:  # Проверяем, не прошел ли объект уже итерацию
+            if obj:  # Проверяем что объект есть в клетке
                 if (isinstance(obj, Cell) or isinstance(obj, Predator)
                         and obj.count_of_cycle == get_global_var("count_of_cycle")):
                     obj.execute_genome()
                     set_global_var(var="count_of_cells", value=get_global_var("count_of_cells") + 1)
+
+                    #obj.count_of_cycle = get_global_var("count_of_cycle") + 1 # надо исправить
                 elif isinstance(obj, Food) and obj.count_of_cycle == get_global_var("count_of_cycle"):
                     obj.check_death()
                     obj.move()
                     set_global_var(var="count_of_food", value=get_global_var("count_of_food") + 1)
 
-                obj.count_of_cycle = get_global_var("count_of_cycle") + 1
+                obj.augment_count_of_life() # Увеличиваем счетчик прожитых циклов
+                obj.count_of_cycle = get_global_var("count_of_cycle") + 1 # надо исправить
+
+
     set_global_var(var="count_of_cycle", value=get_global_var("count_of_cycle") + 1)
 
 

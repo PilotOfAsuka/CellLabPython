@@ -21,6 +21,7 @@ class Food:
         self.position = x, y
         self.x, self.y = self.position
         self.count_of_cycle = 0
+        self.count_of_life = 0
         self.genome_number = genome_number
 
     def move(self):
@@ -40,7 +41,7 @@ class Food:
         pass
 
     def check_death(self):
-        if self.count_of_cycle >= 10000:
+        if self.get_count_of_life() >= 10000:
             x, y = self.position
             world_grid[y][x] = None
 
@@ -49,10 +50,18 @@ class Food:
         Отрисовка объекта
         """
         x, y = self.position
+
         rect = pg.Rect((x + camera.x_offset) * (CELL_SIZE * camera.scale),
                        (y + camera.y_offset) * (CELL_SIZE * camera.scale),
                        (CELL_SIZE * camera.scale), (CELL_SIZE * camera.scale))
         pg.draw.rect(surface, self.color, rect)
+
+    def augment_count_of_life(self):
+        self.count_of_life += 1
+        pass
+
+    def get_count_of_life(self):
+        return self.count_of_life
 
 
 # Класс BotGenome, определяющий поведение и свойства бота
@@ -66,6 +75,7 @@ class BotGenome:
         self.color = color
         self.count_of_reproduce = 0
         self.count_of_cycle = 0
+        self.count_of_life = 0
         self.screen_position = x * CELL_SIZE, y * CELL_SIZE
         self.max_energy = 1100
 
@@ -149,6 +159,14 @@ class BotGenome:
                        (y + camera.y_offset) * (CELL_SIZE * camera.scale),
                        (CELL_SIZE * camera.scale), (CELL_SIZE * camera.scale))
         pg.draw.rect(surface, self.color, rect)
+
+    def augment_count_of_life(self):
+        self.count_of_life += 1
+        pass
+
+    def get_count_of_life(self):
+        return self.count_of_life
+
 
 
 class Predator(BotGenome):

@@ -17,13 +17,14 @@ def start_cycle(run=False):
             start_stop_button.handle_event(event)
             camera.handle_event(event)
 
+        if True:
+            set_global_var(var="temp", value=weather_simulation(get_global_var("count_of_cycle")))
+            update_surface()
+
+
         surface.fill(BKG_COLOR)
         camera.update()
-
-        set_global_var(var="temp", value=weather_simulation(get_global_var("count_of_cycle")))
-        update_surface()
         draw_surface()
-
         draw_gui()
         pg.display.flip()
         clock.tick(FPS)
