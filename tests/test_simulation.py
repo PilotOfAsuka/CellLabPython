@@ -1,6 +1,7 @@
 import unittest
 
 from genome import Cell, Food
+from misc import environment
 from misc import vars as v
 from misc.func import get_global_var
 from simulation import calculate_surface, restart_world, update_simulation
@@ -11,6 +12,9 @@ def reset_world():
         for x in range(v.GRID_SIZE_W):
             v.world_grid[y][x] = None
     v.active_objects.clear()
+    environment.humidity_map = bytearray(v.GRID_SIZE_W * v.GRID_SIZE_H)
+    environment.signal_map = bytearray(v.GRID_SIZE_W * v.GRID_SIZE_H)
+    environment.active_signal_indexes.clear()
     v.global_vars.update({"count_of_cycle": 0, "count_of_food": 0, "count_of_cells": 0, "temp": 0})
 
 
@@ -63,6 +67,46 @@ class SimulationTests(unittest.TestCase):
         self.assertEqual(len(first_cell.genome), 80)
 
         restart_world(cell_size=3, genome_size=64, start_cells=1000)
+
+    def test_cell_leaves_signal(self):
+        cell = Cell(x=3, y=3, genome=[55] * 64)
+        v.world_grid[3][3] = cell
+        v.register_object(cell)
+
+        calculate_surface()
+
+        self.assertGreater(environment.get_signal(3, 3), 0)
+
+    def test_light_is_stronger_at_top(self):
+        top_light = environment.get_light(0, 0, cycle=0)
+        bottom_light = environment.get_light(0, v.GRID_SIZE_H - 1, cycle=0)
+
+        self.assertGreater(top_light, bottom_light)
+
+    def test_humidity_boosts_photosynthesis(self):
+        dry_cell = Cell(food=500, x=5, y=5, genome=[0] * 64)
+        v.world_grid[5][5] = dry_cell
+        dry_cell.photosynthesis()
+        dry_food = dry_cell.food
+
+        reset_world()
+        environment.humidity_map[environment.map_index(5, 5)] = 100
+        wet_cell = Cell(food=500, x=5, y=5, genome=[0] * 64)
+        v.world_grid[5][5] = wet_cell
+        wet_cell.photosynthesis()
+
+        self.assertGreater(wet_cell.food, dry_food)
+
+    def test_signal_moves_genome_pointer(self):
+        cell = Cell(x=4, y=4, genome=[1] * 64)
+        v.world_grid[4][4] = cell
+        signal_index = environment.map_index(4, 4)
+        environment.signal_map[signal_index] = 60
+        environment.active_signal_indexes.add(signal_index)
+
+        cell.apply_environment_effects()
+
+        self.assertNotEqual(cell.ptr, 0)
 
 
 if __name__ == "__main__":

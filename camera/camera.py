@@ -10,7 +10,8 @@ class Camera:
 
         self.x_offset = 0
         self.y_offset = 0
-        self.min_offset = 0
+        self.min_x_offset = 0
+        self.min_y_offset = 0
 
         self.moving_left = False
         self.moving_right = False
@@ -23,12 +24,24 @@ class Camera:
             self.y_offset = 0
             self.x_offset = 0
 
-        if self.scale == 2:
-            self.min_offset = -100
-        elif self.scale == 3:
-            self.min_offset = -133
+        self.update_bounds()
 
         self.update_position()
+
+    def update_bounds(self):
+        viewport_w = v.width - v.gui_offset
+        viewport_h = v.height
+        cell_px = max(1, v.CELL_SIZE * self.scale)
+        world_w = v.GRID_SIZE_W * cell_px
+        world_h = v.GRID_SIZE_H * cell_px
+
+        self.min_x_offset = -max(0, world_w - viewport_w) // cell_px
+        self.min_y_offset = -max(0, world_h - viewport_h) // cell_px
+        self.x_offset = self.clamp_offset(self.x_offset, self.min_x_offset)
+        self.y_offset = self.clamp_offset(self.y_offset, self.min_y_offset)
+
+    def clamp_offset(self, value, min_offset):
+        return max(min_offset, min(0, value))
 
     def handle_event(self, event):
         if event.type == pg.KEYDOWN:
@@ -65,16 +78,16 @@ class Camera:
 
     def update_position(self):
         if self.moving_left is True:
-            self.x_offset = self.x_offset + 1 if self.min_offset < self.x_offset + 1 < 1 else self.x_offset
+            self.x_offset = self.clamp_offset(self.x_offset + 1, self.min_x_offset)
 
         if self.moving_right is True:
-            self.x_offset = self.x_offset - 1 if self.min_offset < self.x_offset - 1 < 1 else self.x_offset
+            self.x_offset = self.clamp_offset(self.x_offset - 1, self.min_x_offset)
 
         if self.moving_up is True:
-            self.y_offset = self.y_offset + 1 if self.min_offset < self.y_offset + 1 < 1 else self.y_offset
+            self.y_offset = self.clamp_offset(self.y_offset + 1, self.min_y_offset)
             pass
         if self.moving_down is True:
-            self.y_offset = self.y_offset - 1 if self.min_offset < self.y_offset - 1 < 1 else self.y_offset
+            self.y_offset = self.clamp_offset(self.y_offset - 1, self.min_y_offset)
             pass
 
 

@@ -1,4 +1,5 @@
 import random
+from misc import environment
 from misc import vars as v
 from misc.func import normalize_value, get_global_var, mutate_genome_new, get_free_adjacent_positions
 from misc import colors as c
@@ -119,7 +120,8 @@ class BotGenome:
             
     # Функция опроса расстояния до солнца и смещения  
     def how_much_distance_to_sun(self):
-        sun_dist = normalize_value(self.position[1], 0, v.GRID_SIZE_H, 0, 5)
+        x, y = self.position
+        sun_dist = normalize_value(environment.get_light(x, y), 0, 100, 5, 0)
         # Перемещаем указатель текущей команды
         self.ptr = self_get_next_index(self, step=sun_dist)
 
@@ -127,7 +129,8 @@ class BotGenome:
         if self.food <= 0:  # Условие смерти клетки при отрицательной энергии
             x, y = self.position
             v.world_grid[y][x] = None  # Удаление бота из сетки
-            if random.random() < 0.1:
+            humidity = environment.get_humidity(x, y)
+            if random.random() < min(0.35, 0.1 + humidity / 500):
                 # Иногда смерть оставляет органику с фрагментом генома: это простая наследуемая среда.
                 food = Food(x=x, y=y, food=300, genome_number=self_get_index_of_bias(self, 1, 64),
                             color=get_colors_bias(self, 67, 117, 54, 104, 34, 84))
@@ -145,6 +148,10 @@ class BotGenome:
         return self.count_of_life
 
     def count_neighbors(self):
+        current_cycle = get_global_var("count_of_cycle")
+        if getattr(self, "_neighbors_cycle", None) == current_cycle:
+            return self._neighbors_count
+
         x, y = self.position
         neighbors = 0
         for dx, dy in v.move_directions:
@@ -154,13 +161,22 @@ class BotGenome:
                 continue
             if isinstance(v.world_grid[ny][nx], BotGenome):
                 neighbors += 1
+
+        self._neighbors_cycle = current_cycle
+        self._neighbors_count = neighbors
         return neighbors
 
-    def apply_population_pressure(self):
+    def apply_environment_effects(self):
+        x, y = self.position
         neighbors = self.count_neighbors()
+        signal = environment.get_signal(x, y)
 
         if neighbors > 4:
             self.food -= (neighbors - 4) * 4
+        if signal > 45:
+            self.ptr = self_get_next_index(self, step=1 + signal % 5)
+
+        environment.leave_signal(self.position)
 
 
 
@@ -173,7 +189,7 @@ class Predator(BotGenome):
         # Проверка на смерть бота, если его пищи нет
         if self.check_death():
             return
-        self.apply_population_pressure()
+        self.apply_environment_effects()
         if self.check_death():
             return
         if self.food >= 1000:  # Условие для деления клетки
@@ -299,7 +315,7 @@ class Cell(BotGenome):
         # Проверка на смерть бота, если его пищи нет
         if self.check_death():
             return
-        self.apply_population_pressure()
+        self.apply_environment_effects()
         if self.check_death():
             return
         if self.food >= 1000:  # Условие для деления клетки
@@ -337,9 +353,11 @@ class Cell(BotGenome):
         x, y = self.position
         base_food = normalize_value(y, 0, v.GRID_SIZE_H,
                                     food_values['photosynthesis']['min'], food_values['photosynthesis']['max'])
+        light = environment.get_light(x, y)
+        humidity = environment.get_humidity(x, y)
         neighbors = self.count_neighbors()
         pressure_penalty = max(0, neighbors - 3) * 8
-        self.food += int(base_food - pressure_penalty)
+        self.food += int(base_food * (0.35 + light / 90) + humidity / 4 - pressure_penalty)
         # Ограничиваем максимальное количество энергии
         self.food = min(self.food, self.max_energy)
         self.move_ptr()  # Переход УТК
@@ -353,7 +371,8 @@ class Cell(BotGenome):
             x, y = self.position
             # Удаление бота из сетки если Нет свободных позиций для размножения
             v.world_grid[y][x] = None
-            if random.random() < 0.1:
+            humidity = environment.get_humidity(x, y)
+            if random.random() < min(0.35, 0.1 + humidity / 500):
                 # С шансом 10 процентов после смерти бота появляется органика (Если нет места для размножения)
                 food = Food(
                     x=x, y=y, food=300, genome_number=self_get_index_of_bias(self, 1, 64),

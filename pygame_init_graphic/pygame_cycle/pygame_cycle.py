@@ -4,7 +4,6 @@ from pygame_init_graphic.pygame_init import *
 from pygame_init_graphic.gui import draw_gui, handle_gui_event, start_stop_button
 from pygame_init_graphic.renderer import draw_surface
 from camera.camera import camera
-from misc.colors import BKG_COLOR
 from simulation import update_simulation, init_cells
 from misc.func import set_global_var, get_global_var, weather_simulation
 from misc.vars import FPS
@@ -28,8 +27,6 @@ def start_cycle(run=False):
         update_simulation(start_stop_button.click)
         set_global_var(var="simulation_ms", value=(perf_counter() - sim_start) * 1000)
 
-
-        surface.fill(BKG_COLOR)
         camera.update()
 
         draw_start = perf_counter()
