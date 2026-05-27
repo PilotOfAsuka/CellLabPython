@@ -9,6 +9,8 @@ humidity_map = bytearray()
 signal_map = bytearray()
 active_signal_indexes = set()
 environment_version = 0
+_daylight_cycle = None
+_daylight_value = 0.65
 
 
 def clamp(value, min_value=0, max_value=100):
@@ -76,11 +78,15 @@ def update_environment(cycle):
 
 
 def get_humidity(x, y):
-    return get_layer_value(humidity_map, x, y)
+    if not humidity_map or not (0 <= x < v.GRID_SIZE_W and 0 <= y < v.GRID_SIZE_H):
+        return 0
+    return humidity_map[y * v.GRID_SIZE_W + x]
 
 
 def get_signal(x, y):
-    return get_layer_value(signal_map, x, y)
+    if not signal_map or not (0 <= x < v.GRID_SIZE_W and 0 <= y < v.GRID_SIZE_H):
+        return 0
+    return signal_map[y * v.GRID_SIZE_W + x]
 
 
 def leave_signal(position, amount=18):
@@ -89,13 +95,19 @@ def leave_signal(position, amount=18):
         return
 
     index = map_index(x, y)
-    signal_map[index] = clamp(signal_map[index] + amount)
+    value = signal_map[index] + amount
+    signal_map[index] = 100 if value > 100 else value
     active_signal_indexes.add(index)
 
 
 def get_daylight(cycle=None):
+    global _daylight_cycle, _daylight_value
+
     current_cycle = v.global_vars["count_of_cycle"] if cycle is None else cycle
-    return 0.65 + 0.35 * math.sin(current_cycle / 1200)
+    if _daylight_cycle != current_cycle:
+        _daylight_cycle = current_cycle
+        _daylight_value = 0.65 + 0.35 * math.sin(current_cycle / 1200)
+    return _daylight_value
 
 
 def get_light_bucket(cycle=None, bucket_size=120):
@@ -107,7 +119,12 @@ def get_light(x, y, cycle=None):
     # Свет сильнее сверху, слабее внизу, а влажные зоны работают как простая облачность.
     height_factor = 1 - y / max(1, v.GRID_SIZE_H - 1)
     cloud_shadow = get_humidity(x, y) * 0.22
-    return clamp(height_factor * 100 * get_daylight(cycle) - cloud_shadow, 5, 100)
+    light = height_factor * 100 * get_daylight(cycle) - cloud_shadow
+    if light < 5:
+        return 5
+    if light > 100:
+        return 100
+    return int(light)
 
 
 def blend_color(base_color, overlay_color, alpha):

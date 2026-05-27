@@ -1,7 +1,7 @@
 from genome import Cell, Food, Predator
 from misc import environment
 from misc import vars as v
-from misc.func import random_position, set_global_var, get_global_var
+from misc.func import random_position
 
 
 # Этот модуль отвечает только за логику мира: кто живет, двигается, ест и делится.
@@ -13,38 +13,48 @@ def update_simulation(is_running=True):
 
 def calculate_surface():
     # count_of_cycle защищает объекты от повторного хода после перемещения или рождения.
-    current_cycle = get_global_var("count_of_cycle")
+    current_cycle = v.global_vars["count_of_cycle"]
+    v.update_cycle_math(v.global_vars["temp"])
+    v.current_daylight = environment.get_daylight(current_cycle)
     count_of_cells = 0
     count_of_food = 0
+    cycle_objects = v.active_objects
+    v.active_objects = []
+    active_append = v.active_objects.append
+    world_grid = v.world_grid
+    grid_w = v.GRID_SIZE_W
+    grid_h = v.GRID_SIZE_H
 
-    for obj in tuple(v.active_objects):
+    for obj in cycle_objects:
         x, y = obj.position
-        if not (0 <= x < v.GRID_SIZE_W and 0 <= y < v.GRID_SIZE_H):
+        if not (0 <= x < grid_w and 0 <= y < grid_h):
             continue
-        if v.world_grid[y][x] is not obj or obj.count_of_cycle != current_cycle:
+        if world_grid[y][x] is not obj:
+            continue
+        if obj.count_of_cycle != current_cycle:
+            active_append(obj)
             continue
 
-        if isinstance(obj, (Cell, Predator)):
+        if obj.__class__ is Food:
+            if obj.count_of_life >= 10000:
+                world_grid[y][x] = None
+                continue
+        else:
             obj.execute_genome()
 
-        elif isinstance(obj, Food):
-            if obj.check_death():
-                continue
-            obj.move()
-
         obj_x, obj_y = obj.position
-        if v.world_grid[obj_y][obj_x] is obj:
-            obj.augment_count_of_life()  # Увеличиваем счетчик прожитых циклов
+        if world_grid[obj_y][obj_x] is obj:
+            obj.count_of_life += 1  # Увеличиваем счетчик прожитых циклов
             obj.count_of_cycle = current_cycle + 1
-            if isinstance(obj, (Cell, Predator)):
-                count_of_cells += 1
-            elif isinstance(obj, Food):
+            active_append(obj)
+            if obj.__class__ is Food:
                 count_of_food += 1
+            else:
+                count_of_cells += 1
 
-    set_global_var(var="count_of_cells", value=count_of_cells)
-    set_global_var(var="count_of_food", value=count_of_food)
-    set_global_var(var="count_of_cycle", value=current_cycle + 1)
-    v.prune_active_objects()
+    v.global_vars["count_of_cells"] = count_of_cells
+    v.global_vars["count_of_food"] = count_of_food
+    v.global_vars["count_of_cycle"] = current_cycle + 1
     environment.update_environment(current_cycle)
 
 
@@ -54,6 +64,7 @@ def init_cells():
         free_x, free_y = random_position()
         bot = Cell(x=free_x, y=free_y)
         v.world_grid[free_y][free_x] = bot
+        v.set_bot_position(free_x, free_y)
         v.register_object(bot)
     pass
 

@@ -12,6 +12,8 @@ def reset_world():
         for x in range(v.GRID_SIZE_W):
             v.world_grid[y][x] = None
     v.active_objects.clear()
+    v.bot_grid[:] = bytearray(v.GRID_SIZE_W * v.GRID_SIZE_H)
+    v.neighbor_grid[:] = bytearray(v.GRID_SIZE_W * v.GRID_SIZE_H)
     environment.humidity_map = bytearray(v.GRID_SIZE_W * v.GRID_SIZE_H)
     environment.signal_map = bytearray(v.GRID_SIZE_W * v.GRID_SIZE_H)
     environment.active_signal_indexes.clear()
@@ -44,6 +46,7 @@ class SimulationTests(unittest.TestCase):
         genome[1] = 2  # Place child to the right, later in the row-major scan.
         parent = Cell(food=1000, x=10, y=10, genome=genome)
         v.world_grid[10][10] = parent
+        v.set_bot_position(10, 10)
         v.register_object(parent)
 
         calculate_surface()
@@ -71,6 +74,7 @@ class SimulationTests(unittest.TestCase):
     def test_cell_leaves_signal(self):
         cell = Cell(x=3, y=3, genome=[55] * 64)
         v.world_grid[3][3] = cell
+        v.set_bot_position(3, 3)
         v.register_object(cell)
 
         calculate_surface()
@@ -86,6 +90,7 @@ class SimulationTests(unittest.TestCase):
     def test_humidity_boosts_photosynthesis(self):
         dry_cell = Cell(food=500, x=5, y=5, genome=[0] * 64)
         v.world_grid[5][5] = dry_cell
+        v.set_bot_position(5, 5)
         dry_cell.photosynthesis()
         dry_food = dry_cell.food
 
@@ -93,6 +98,7 @@ class SimulationTests(unittest.TestCase):
         environment.humidity_map[environment.map_index(5, 5)] = 100
         wet_cell = Cell(food=500, x=5, y=5, genome=[0] * 64)
         v.world_grid[5][5] = wet_cell
+        v.set_bot_position(5, 5)
         wet_cell.photosynthesis()
 
         self.assertGreater(wet_cell.food, dry_food)
@@ -100,6 +106,7 @@ class SimulationTests(unittest.TestCase):
     def test_signal_moves_genome_pointer(self):
         cell = Cell(x=4, y=4, genome=[1] * 64)
         v.world_grid[4][4] = cell
+        v.set_bot_position(4, 4)
         signal_index = environment.map_index(4, 4)
         environment.signal_map[signal_index] = 60
         environment.active_signal_indexes.add(signal_index)
@@ -107,6 +114,23 @@ class SimulationTests(unittest.TestCase):
         cell.apply_environment_effects()
 
         self.assertNotEqual(cell.ptr, 0)
+
+    def test_neighbor_grid_tracks_bots_not_food(self):
+        cell = Cell(x=5, y=5, genome=[55] * 64)
+        neighbor = Cell(x=6, y=5, genome=[55] * 64)
+        food = Food(x=5, y=6)
+        v.world_grid[5][5] = cell
+        v.world_grid[5][6] = neighbor
+        v.world_grid[6][5] = food
+        v.set_bot_position(5, 5)
+        v.set_bot_position(6, 5)
+
+        self.assertEqual(cell.count_neighbors(), 1)
+
+        v.world_grid[5][6] = None
+        v.set_bot_position(6, 5, False)
+
+        self.assertEqual(cell.count_neighbors(), 0)
 
 
 if __name__ == "__main__":
