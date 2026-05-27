@@ -1,17 +1,17 @@
 import random
 import math
-from misc.vars import GRID_SIZE_H, GRID_SIZE_W, move_directions, global_vars, world_grid
+from misc import vars as v
 
 
-# Здесь можно хранить одиночные функции
+# Здесь лежат маленькие функции, которые не принадлежат конкретному классу.
 
 # Функция для генерации случайной свободной позиции
 def random_position():
-    x = random.randint(0, GRID_SIZE_W - 1)
-    y = random.randint(0, GRID_SIZE_H - 1)
-    while world_grid[y][x] is not None:
-        x = random.randint(0, GRID_SIZE_W - 1)
-        y = random.randint(0, GRID_SIZE_H - 1)
+    x = random.randint(0, v.GRID_SIZE_W - 1)
+    y = random.randint(0, v.GRID_SIZE_H - 1)
+    while v.world_grid[y][x] is not None:
+        x = random.randint(0, v.GRID_SIZE_W - 1)
+        y = random.randint(0, v.GRID_SIZE_H - 1)
     return x, y  # Возврат случайных свободных позиций
 
                     
@@ -19,10 +19,10 @@ def random_position():
 def get_free_adjacent_positions(position):
     x, y = position
     free_positions = []
-    for dx, dy in move_directions:
-        nx = x + dx if -1 < x + dx < GRID_SIZE_W else x
-        ny = y + dy if -1 < y + dy < GRID_SIZE_H else y
-        if world_grid[ny][nx] is None:
+    for dx, dy in v.move_directions:
+        nx = x + dx if -1 < x + dx < v.GRID_SIZE_W else x
+        ny = y + dy if -1 < y + dy < v.GRID_SIZE_H else y
+        if v.world_grid[ny][nx] is None:
             free_positions.append((nx, ny))
     return free_positions  # Возврат свободных позиций
 
@@ -44,7 +44,8 @@ def mutate_genome_new(genome, mutation_chance, new_genome):
     Mutation_chance = шанс мутации
     new_genome = новое значение
     """
-    i = random.randint(0, 63)
+    # Сейчас мутирует только один случайный ген; это мягкая точечная мутация.
+    i = random.randrange(len(genome))
     if random.random() < mutation_chance:
         genome[i] = new_genome  # Новое значение гена
 
@@ -98,10 +99,10 @@ def euclidean_distance(point1, point2):
 
 
 def set_global_var(var, value):
-    global_vars[var] = value
+    v.global_vars[var] = value
     pass
 
 
 def get_global_var(var):
-    value = global_vars.get(var)
+    value = v.global_vars.get(var)
     return value

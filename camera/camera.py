@@ -1,10 +1,11 @@
 from pygame_init_graphic.pygame_init import pg
-from misc.vars import width, height
+from misc import vars as v
 
 
 class Camera:
     def __init__(self):
-        self.cam = pg.Rect(0, 0, width-200, height)
+        # Камера хранит смещение в клетках мира, а renderer уже переводит его в пиксели.
+        self.cam = pg.Rect(0, 0, v.width - v.gui_offset, v.height)
         self.scale = 1
 
         self.x_offset = 0
@@ -17,7 +18,7 @@ class Camera:
         self.moving_down = False
 
     def update(self):
-        # Обновление камеры
+        # На масштабе 1 весь мир помещается в экран, поэтому смещение сбрасываем.
         if self.scale == 1:
             self.y_offset = 0
             self.x_offset = 0

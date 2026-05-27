@@ -2,7 +2,7 @@ import pygame as pg
 from misc.vars import RES
 
 
-# Инициализация Pygame
+# Здесь создаются общие pygame-объекты, которыми пользуются GUI и renderer.
 pg.init()
 pg.display.set_caption("CellLab")
 surface = pg.display.set_mode(RES)

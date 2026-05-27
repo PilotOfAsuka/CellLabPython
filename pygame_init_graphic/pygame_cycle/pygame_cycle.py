@@ -1,7 +1,7 @@
 from time import perf_counter
 
 from pygame_init_graphic.pygame_init import *
-from pygame_init_graphic.gui import draw_gui, start_stop_button
+from pygame_init_graphic.gui import draw_gui, handle_gui_event, start_stop_button
 from pygame_init_graphic.renderer import draw_surface
 from camera.camera import camera
 from misc.colors import BKG_COLOR
@@ -13,14 +13,16 @@ init_cells()
 
 
 def start_cycle(run=False):
+    # Главный цикл связывает ввод, симуляцию, отрисовку и GUI-метрики времени.
     while run:
         for event in pg.event.get():
             if event.type == pg.QUIT:
                 exit()
-            start_stop_button.handle_event(event)
-            camera.handle_event(event)
+            if not handle_gui_event(event):
+                camera.handle_event(event)
 
-        set_global_var(var="temp", value=weather_simulation(get_global_var("count_of_cycle")))
+        if get_global_var("temp_running"):
+            set_global_var(var="temp", value=weather_simulation(get_global_var("count_of_cycle")))
 
         sim_start = perf_counter()
         update_simulation(start_stop_button.click)
