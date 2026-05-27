@@ -5,7 +5,7 @@ gui_offset = 400  # Отступ справа от края для интерф�
 FPS = 60
 
 # Мир состоит из клеточек. CELL_SIZE читается при старте и задает размер сетки.
-CELL_SIZE = 3  # Размер клетки изменяя этот параметр меняется масштаб
+CELL_SIZE = 5  # Размер клетки изменяя этот параметр меняется масштаб
 GRID_SIZE_W = (width - gui_offset) // CELL_SIZE  # Задаем ширину сетки мира (-200 Это отступ для интерфейса)
 GRID_SIZE_H = height // CELL_SIZE  # Задаем высоту сетки мира
 START_NUM_OF_CELL = 1000  # Стартовое число клеток при создании мира
@@ -43,6 +43,8 @@ world_grid = [[None for _ in range(GRID_SIZE_W)] for _ in range(GRID_SIZE_H)]  #
 bot_grid = bytearray(GRID_SIZE_W * GRID_SIZE_H)
 neighbor_grid = bytearray(GRID_SIZE_W * GRID_SIZE_H)
 active_objects = []
+active_bots = []
+active_food = []
 photosynthesis_by_y = []
 light_height_by_y = []
 current_daylight = 0.65
@@ -55,6 +57,10 @@ food_check_temp_offset = 2
 
 def register_object(obj):
     active_objects.append(obj)
+    if obj.__class__.__name__ == "Food":
+        active_food.append(obj)
+    else:
+        active_bots.append(obj)
 
 
 def grid_index(x, y):
@@ -116,6 +122,8 @@ def apply_world_settings(cell_size=None, genome_size=None, start_cells=None):
     bot_grid[:] = bytearray(max_cells)
     neighbor_grid[:] = bytearray(max_cells)
     active_objects.clear()
+    active_bots.clear()
+    active_food.clear()
 
     global_vars["cell_size_setting"] = CELL_SIZE
     global_vars["genome_size_setting"] = gen_size

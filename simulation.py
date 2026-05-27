@@ -18,14 +18,19 @@ def calculate_surface():
     v.current_daylight = environment.get_daylight(current_cycle)
     count_of_cells = 0
     count_of_food = 0
-    cycle_objects = v.active_objects
+    cycle_bots = v.active_bots
+    cycle_food = v.active_food
     v.active_objects = []
+    v.active_bots = []
+    v.active_food = []
     active_append = v.active_objects.append
+    bot_append = v.active_bots.append
+    food_append = v.active_food.append
     world_grid = v.world_grid
     grid_w = v.GRID_SIZE_W
     grid_h = v.GRID_SIZE_H
 
-    for obj in cycle_objects:
+    for obj in cycle_bots:
         x, y = obj.position
         if not (0 <= x < grid_w and 0 <= y < grid_h):
             continue
@@ -33,24 +38,38 @@ def calculate_surface():
             continue
         if obj.count_of_cycle != current_cycle:
             active_append(obj)
+            bot_append(obj)
             continue
 
-        if obj.__class__ is Food:
-            if obj.count_of_life >= 10000:
-                world_grid[y][x] = None
-                continue
-        else:
-            obj.execute_genome()
+        obj.execute_genome()
 
         obj_x, obj_y = obj.position
         if world_grid[obj_y][obj_x] is obj:
             obj.count_of_life += 1  # Увеличиваем счетчик прожитых циклов
             obj.count_of_cycle = current_cycle + 1
             active_append(obj)
-            if obj.__class__ is Food:
-                count_of_food += 1
-            else:
-                count_of_cells += 1
+            bot_append(obj)
+            count_of_cells += 1
+
+    for obj in cycle_food:
+        x, y = obj.position
+        if not (0 <= x < grid_w and 0 <= y < grid_h):
+            continue
+        if world_grid[y][x] is not obj:
+            continue
+        if obj.count_of_cycle != current_cycle:
+            active_append(obj)
+            food_append(obj)
+            continue
+        if obj.count_of_life >= 10000:
+            world_grid[y][x] = None
+            continue
+
+        obj.count_of_life += 1
+        obj.count_of_cycle = current_cycle + 1
+        active_append(obj)
+        food_append(obj)
+        count_of_food += 1
 
     v.global_vars["count_of_cells"] = count_of_cells
     v.global_vars["count_of_food"] = count_of_food

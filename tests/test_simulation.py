@@ -12,6 +12,8 @@ def reset_world():
         for x in range(v.GRID_SIZE_W):
             v.world_grid[y][x] = None
     v.active_objects.clear()
+    v.active_bots.clear()
+    v.active_food.clear()
     v.bot_grid[:] = bytearray(v.GRID_SIZE_W * v.GRID_SIZE_H)
     v.neighbor_grid[:] = bytearray(v.GRID_SIZE_W * v.GRID_SIZE_H)
     environment.humidity_map = bytearray(v.GRID_SIZE_W * v.GRID_SIZE_H)

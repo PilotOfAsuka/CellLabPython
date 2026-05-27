@@ -29,6 +29,8 @@ class Food:
         self.count_of_cycle = 0
         self.count_of_life = 0
         self.genome_number = genome_number
+        self._render_cache_key = None
+        self._render_mapped_color = None
 
     def move(self):
         """
@@ -71,6 +73,8 @@ class BotGenome:
         self.count_of_life = 0
         self.max_energy = 1100
         self.genome_len = len(self.genome)
+        self._render_cache_key = None
+        self._render_mapped_color = None
 
     # Функция команды "Сколько у меня еды?"
     def how_many_food(self):
@@ -165,18 +169,18 @@ class BotGenome:
 
     def apply_environment_effects(self):
         x, y = self.position
-        neighbors = self.count_neighbors()
         signal_index = y * v.GRID_SIZE_W + x
-        signal = environment.signal_map[signal_index] if environment.signal_map else 0
+        neighbors = v.neighbor_grid[signal_index]
+        signal = environment.signal_map[signal_index]
 
         if neighbors > 4:
             self.food -= (neighbors - 4) * 4
         if signal > 45:
             self.ptr = self_get_next_index(self, step=1 + signal % 5)
 
-        if environment.signal_map:
-            new_signal = signal + 18
-            environment.signal_map[signal_index] = 100 if new_signal > 100 else new_signal
+        new_signal = signal + 18
+        environment.signal_map[signal_index] = 100 if new_signal > 100 else new_signal
+        if signal == 0:
             environment.active_signal_indexes.add(signal_index)
 
 
@@ -193,7 +197,18 @@ class Predator(BotGenome):
         if self.food <= 0:
             self.check_death()
             return
-        self.apply_environment_effects()
+        x, y = self.position
+        signal_index = y * v.GRID_SIZE_W + x
+        neighbors = v.neighbor_grid[signal_index]
+        signal = environment.signal_map[signal_index]
+        if neighbors > 4:
+            self.food -= (neighbors - 4) * 4
+        if signal > 45:
+            self.ptr = self_get_next_index(self, step=1 + signal % 5)
+        new_signal = signal + 18
+        environment.signal_map[signal_index] = 100 if new_signal > 100 else new_signal
+        if signal == 0:
+            environment.active_signal_indexes.add(signal_index)
         if self.food <= 0:
             self.check_death()
             return
@@ -206,7 +221,18 @@ class Predator(BotGenome):
                 self.check_death()
                 return
             command = self.genome[self.ptr]  # УТК
-            self.execute_command(command)  # Выполнение команды генома (УТК)
+            if command < 15:
+                self.move()
+            elif command < 25:
+                self.how_many_food()
+            elif command < 40:
+                self.is_this_temp()
+            elif command < 50:
+                self.command_view()
+            elif command < 55:
+                self.how_much_distance_to_sun()
+            else:
+                self.move_ptr_to()
         
     def execute_command(self, command):
         # Хищник тратит энергию на активное движение и может съедать клетки.
@@ -326,7 +352,18 @@ class Cell(BotGenome):
         if self.food <= 0:
             self.check_death()
             return
-        self.apply_environment_effects()
+        x, y = self.position
+        signal_index = y * v.GRID_SIZE_W + x
+        neighbors = v.neighbor_grid[signal_index]
+        signal = environment.signal_map[signal_index]
+        if neighbors > 4:
+            self.food -= (neighbors - 4) * 4
+        if signal > 45:
+            self.ptr = self_get_next_index(self, step=1 + signal % 5)
+        new_signal = signal + 18
+        environment.signal_map[signal_index] = 100 if new_signal > 100 else new_signal
+        if signal == 0:
+            environment.active_signal_indexes.add(signal_index)
         if self.food <= 0:
             self.check_death()
             return
@@ -339,7 +376,18 @@ class Cell(BotGenome):
                 self.check_death()
                 return
             command = self.genome[self.ptr]  # УТК
-            self.execute_command(command)  # Выполнение команды генома (УТК)
+            if command < 15:
+                self.photosynthesis()
+            elif command < 24:
+                self.how_many_food()
+            elif command < 40:
+                self.is_this_temp()
+            elif command < 50:
+                self.command_view()
+            elif command < 55:
+                self.how_much_distance_to_sun()
+            else:
+                self.move_ptr_to()
 
     def execute_command(self, command):
         # Обычная клетка в основном фотосинтезирует и реагирует на условия мира.
@@ -366,7 +414,7 @@ class Cell(BotGenome):
         base_food = v.photosynthesis_by_y[y]
         humidity = get_cached_humidity(x, y)
         light = get_cached_light_by_humidity(y, humidity)
-        neighbors = self.count_neighbors()
+        neighbors = v.neighbor_grid[y * v.GRID_SIZE_W + x]
         pressure_penalty = max(0, neighbors - 3) * 8
         self.food += int(base_food * (0.35 + light / 90) + humidity / 4 - pressure_penalty)
         # Ограничиваем максимальное количество энергии
