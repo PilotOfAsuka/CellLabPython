@@ -85,7 +85,7 @@ def get_render_cell_color(base_color, x, y):
 def get_object_mapped_color(obj, x, y):
     cache_key = (obj.color, x, y, environment.environment_version)
 
-    if getattr(obj, "_render_cache_key", None) != cache_key:
+    if obj._render_cache_key != cache_key:
         obj._render_cache_key = cache_key
         obj._render_mapped_color = map_color(get_render_cell_color(obj.color, x, y))
 
@@ -231,9 +231,28 @@ def draw_surface():
     pixels = pg.PixelArray(surface)
 
     try:
-        if cell_size == 1:
+        if cell_size == 1 and x_offset == 0 and y_offset == 0:
+            # Самый частый тяжелый режим: весь мир 1:1 на экране.
+            # Здесь active_objects уже очищен симуляцией, поэтому можно не проверять каждую точку через world_grid.
+            grid = v.world_grid
+            grid_w = v.GRID_SIZE_W
+            for signal_index in environment.active_signal_indexes:
+                x = signal_index % grid_w
+                y = signal_index // grid_w
+                if grid[y][x] is not None:
+                    continue
+                mapped_color = get_signal_mapped_color(x, y)
+                if mapped_color is not None:
+                    pixels[x, y] = mapped_color
+
+            for obj in v.active_objects:
+                x, y = obj.position
+                pixels[x, y] = get_object_mapped_color(obj, x, y)
+                drawn_objects += 1
+
+        elif cell_size == 1:
             # Для размера 1x1 прямое присваивание пикселя быстрее, чем срез PixelArray.
-            for signal_index in tuple(environment.active_signal_indexes):
+            for signal_index in environment.active_signal_indexes:
                 x, y = environment.get_xy(signal_index)
                 if not (start_x <= x < end_x and start_y <= y < end_y):
                     continue
@@ -267,7 +286,7 @@ def draw_surface():
                 drawn_objects += 1
 
         else:
-            for signal_index in tuple(environment.active_signal_indexes):
+            for signal_index in environment.active_signal_indexes:
                 x, y = environment.get_xy(signal_index)
                 if not (start_x <= x < end_x and start_y <= y < end_y):
                     continue
