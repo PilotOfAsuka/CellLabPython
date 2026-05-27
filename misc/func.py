@@ -1,10 +1,6 @@
 import random
-from misc.vars import GRID_SIZE_H, GRID_SIZE_W, move_directions, CELL_SIZE, global_vars, world_grid
-from pygame_init_graphic.pygame_init import pg, surface
-import numpy as np
 import math
-from camera.camera import camera
-import misc.colors as c
+from misc.vars import GRID_SIZE_H, GRID_SIZE_W, move_directions, global_vars, world_grid
 
 
 # Здесь можно хранить одиночные функции
@@ -53,19 +49,6 @@ def mutate_genome_new(genome, mutation_chance, new_genome):
         genome[i] = new_genome  # Новое значение гена
 
 
-# Функция отрисовки объектов
-def draw_obj(obj, border_size=1):
-    x, y = obj.position
-    rect = pg.Rect((x + camera.x_offset) * (CELL_SIZE * camera.scale),
-                   (y + camera.y_offset) * (CELL_SIZE * camera.scale),
-                   (CELL_SIZE * camera.scale), (CELL_SIZE * camera.scale))
-    pg.draw.rect(surface, obj.color, rect)
-    obj.rect = rect
-    border_rect = rect.inflate(border_size * 2, border_size * 2)
-    if obj.click is True:
-        pg.draw.rect(surface, c.BLACK, border_rect, border_size)
-
-
 def weather_simulation(cycle):
     """
     На вход принимает, текущий цикл.
@@ -110,7 +93,7 @@ def euclidean_distance(point1, point2):
     """
     x1, y1 = point1
     x2, y2 = point2
-    distance = np.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2)
+    distance = math.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2)
     return int(distance)
 
 

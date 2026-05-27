@@ -1,8 +1,11 @@
+from time import perf_counter
+
 from pygame_init_graphic.pygame_init import *
 from pygame_init_graphic.gui import draw_gui, start_stop_button
+from pygame_init_graphic.renderer import draw_surface
 from camera.camera import camera
 from misc.colors import BKG_COLOR
-from simulation import update_surface, draw_surface, init_cells
+from simulation import update_simulation, init_cells
 from misc.func import set_global_var, get_global_var, weather_simulation
 from misc.vars import FPS
 
@@ -17,14 +20,21 @@ def start_cycle(run=False):
             start_stop_button.handle_event(event)
             camera.handle_event(event)
 
-        if True:
-            set_global_var(var="temp", value=weather_simulation(get_global_var("count_of_cycle")))
-            update_surface()
+        set_global_var(var="temp", value=weather_simulation(get_global_var("count_of_cycle")))
+
+        sim_start = perf_counter()
+        update_simulation(start_stop_button.click)
+        set_global_var(var="simulation_ms", value=(perf_counter() - sim_start) * 1000)
 
 
         surface.fill(BKG_COLOR)
         camera.update()
-        draw_surface()
+
+        draw_start = perf_counter()
+        drawn_objects = draw_surface()
+        set_global_var(var="draw_ms", value=(perf_counter() - draw_start) * 1000)
+        set_global_var(var="drawn_objects", value=drawn_objects)
+
         draw_gui()
         pg.display.flip()
         clock.tick(FPS)

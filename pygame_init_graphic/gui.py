@@ -75,7 +75,14 @@ start_stop_button = Button(width - gui_offset + gui_offset_x, gui_offset_y + 7 +
 
 
 def draw_text(text, var, x, y):
-    count_text = font.render(text + " " + str(var), True, c.WHITE)
+    value = 0 if var is None else var
+    count_text = font.render(text + " " + str(value), True, c.WHITE)
+    surface.blit(count_text, (x, y))
+
+
+def draw_ms(text, var, x, y):
+    value = 0 if var is None else var
+    count_text = font.render(f"{text} {value:.2f}", True, c.WHITE)
     surface.blit(count_text, (x, y))
 
 
@@ -107,6 +114,15 @@ def draw_gui():
     # Отрисовка текста "Скорость"
     draw_text("Temp.:", get_global_var("temp"),
               width - gui_offset + gui_offset_x, gui_offset_y + line_text_offset * 4)
+
+    draw_ms("Sim ms:", get_global_var("simulation_ms"),
+            width - gui_offset + gui_offset_x, gui_offset_y + line_text_offset * 5)
+
+    draw_ms("Draw ms:", get_global_var("draw_ms"),
+            width - gui_offset + gui_offset_x, gui_offset_y + line_text_offset * 6)
+
+    draw_text("Rects:", get_global_var("drawn_objects"),
+              width - gui_offset + gui_offset_x, gui_offset_y + line_text_offset * 7)
 
     # Отрисовка текста "Скорость"
     draw_text("FPS:", int(clock.get_fps()),

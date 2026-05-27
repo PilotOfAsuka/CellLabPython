@@ -1,8 +1,6 @@
 import random
-from pygame_init_graphic.pygame_init import pg, surface
-from misc.vars import gen_size, CELL_SIZE, move_directions, GRID_SIZE_H, GRID_SIZE_W, world_grid
+from misc.vars import gen_size, move_directions, GRID_SIZE_H, GRID_SIZE_W, world_grid
 from misc.func import normalize_value, get_global_var, mutate_genome_new, get_free_adjacent_positions
-from camera.camera import camera
 from misc import colors as c
 
 
@@ -44,17 +42,8 @@ class Food:
         if self.get_count_of_life() >= 10000:
             x, y = self.position
             world_grid[y][x] = None
-
-    def draw_obj(self):
-        """
-        Отрисовка объекта
-        """
-        x, y = self.position
-
-        rect = pg.Rect((x + camera.x_offset) * (CELL_SIZE * camera.scale),
-                       (y + camera.y_offset) * (CELL_SIZE * camera.scale),
-                       (CELL_SIZE * camera.scale), (CELL_SIZE * camera.scale))
-        pg.draw.rect(surface, self.color, rect)
+            return True
+        return False
 
     def augment_count_of_life(self):
         self.count_of_life += 1
@@ -76,7 +65,6 @@ class BotGenome:
         self.count_of_reproduce = 0
         self.count_of_cycle = 0
         self.count_of_life = 0
-        self.screen_position = x * CELL_SIZE, y * CELL_SIZE
         self.max_energy = 1100
 
     # Функция команды "Сколько у меня еды?"
@@ -147,18 +135,12 @@ class BotGenome:
             x, y = self.position
             world_grid[y][x] = None  # Удаление бота из сетки
             if random.random() < 0.1:
-                world_grid[y][x] = Food(x=x, y=y, food=300, genome_number=self_get_index_of_bias(self, 1, 64),
-                                        color=get_colors_bias(self, 67, 117, 54, 104, 34, 84))
-
-    def draw_obj(self):
-        """
-        Отрисовка объекта
-        """
-        x, y = self.position
-        rect = pg.Rect((x + camera.x_offset) * (CELL_SIZE * camera.scale),
-                       (y + camera.y_offset) * (CELL_SIZE * camera.scale),
-                       (CELL_SIZE * camera.scale), (CELL_SIZE * camera.scale))
-        pg.draw.rect(surface, self.color, rect)
+                food = Food(x=x, y=y, food=300, genome_number=self_get_index_of_bias(self, 1, 64),
+                            color=get_colors_bias(self, 67, 117, 54, 104, 34, 84))
+                food.count_of_cycle = get_global_var("count_of_cycle") + 1
+                world_grid[y][x] = food
+            return True
+        return False
 
     def augment_count_of_life(self):
         self.count_of_life += 1
@@ -176,14 +158,16 @@ class Predator(BotGenome):
     # Функция выполнения генома
     def execute_genome(self):
         # Проверка на смерть бота, если его пищи нет
-        self.check_death()
+        if self.check_death():
+            return
         if self.food >= 1000:  # Условие для деления клетки
             self.reproduce()
-        elif self.food in range(1, 1000):
+        elif 0 < self.food < 1000:
             # За то что клетка думает, она теряет энергию
             self.food -= normalize_value(get_global_var("temp"), -15, 15,
                                          food_values['predator_thinks']['min'], food_values['predator_thinks']['max'])
-            self.check_death()
+            if self.check_death():
+                return
             command = self.genome[self.ptr]  # УТК
             self.execute_command(command)  # Выполнение команды генома (УТК)
         
@@ -209,7 +193,8 @@ class Predator(BotGenome):
         # Логика расхода энергии
         self.food -= normalize_value(get_global_var("temp"), -15, 15,
                                      food_values['predator_move']['min'], food_values['predator_move']['max'])
-        self.check_death()
+        if self.check_death():
+            return
 
         # Выбираем направление на основе смещения
         move_dir = self_get_index_of_bias(self, step=1, len_of_number=len(move_directions))
@@ -252,7 +237,7 @@ class Predator(BotGenome):
                 self.ptr = self_get_next_index(self, step=42)
 
         # Если куда хочет шагнуть клетка есть хищник   
-        elif isinstance(world_grid[new_x][new_y], Predator):
+        elif isinstance(world_grid[new_y][new_x], Predator):
             if self.food >= 1000:
                 self.reproduce()
             else:
@@ -281,6 +266,7 @@ class Predator(BotGenome):
         # Создаем нового бота с мутированным геномом
         new_color = (max(self.color[0] - 1, 90), 0, 0)  # Смещаем цвета
         new_bot = Predator(food=self.food // 4, x=x, y=y, color=new_color, genome=new_genome)  # Создание нового бота
+        new_bot.count_of_cycle = get_global_var("count_of_cycle") + 1
         world_grid[y][x] = new_bot  # Помещаем нового бота в мир
         self.food //= 4  # Разделяем энергию между родительской и дочерней клетки
 
@@ -293,14 +279,16 @@ class Cell(BotGenome):
 
     def execute_genome(self):
         # Проверка на смерть бота, если его пищи нет
-        self.check_death()
+        if self.check_death():
+            return
         if self.food >= 1000:  # Условие для деления клетки
             self.reproduce()
-        elif self.food in range(1, 1000):
+        elif 0 < self.food < 1000:
             # За то что клетка думает, она теряет энергию
-            self.food -= normalize_value(get_global_var("temp"), -15, 15, food_values['predator_thinks']['min'],
-                                         food_values['predator_thinks']['max'])
-            self.check_death()
+            self.food -= normalize_value(get_global_var("temp"), -15, 15, food_values['cell_thinks']['min'],
+                                         food_values['cell_thinks']['max'])
+            if self.check_death():
+                return
             command = self.genome[self.ptr]  # УТК
             self.execute_command(command)  # Выполнение команды генома (УТК)
 
@@ -341,9 +329,11 @@ class Cell(BotGenome):
             world_grid[y][x] = None
             if random.random() < 0.1:
                 # С шансом 10 процентов после смерти бота появляется органика (Если нет места для размножения)
-                world_grid[y][x] = Food(
+                food = Food(
                     x=x, y=y, food=300, genome_number=self_get_index_of_bias(self, 1, 64),
                     color=get_colors_bias(self, 67, 117, 54, 104, 34, 84))
+                food.count_of_cycle = get_global_var("count_of_cycle") + 1
+                world_grid[y][x] = food
             return
 
         # Выбираем случайную свободную позицию для нового бота
@@ -361,11 +351,13 @@ class Cell(BotGenome):
         if self.count_of_reproduce == 10 and self_get_index_of_bias(self, step=2, len_of_number=2) == 1:
             new_bot = Predator(food=self.food // 2, x=x, y=y,
                                color=(230, 1, 92), genome=new_genome)  # Создание нового бота
+            new_bot.count_of_cycle = get_global_var("count_of_cycle") + 1
             world_grid[y][x] = new_bot  # Помещаем нового бота в мир
             self.food //= 4  # Разделяем энергию между родительской и дочерней клетки
         else:
             new_bot = Cell(food=self.food // 4, x=x, y=y,
                            color=new_color, genome=new_genome)  # Создание нового бота
+            new_bot.count_of_cycle = get_global_var("count_of_cycle") + 1
             world_grid[y][x] = new_bot  # Помещаем нового бота в мир
             self.food //= 4  # Разделяем энергию между родительской и дочерней клетки 
             
